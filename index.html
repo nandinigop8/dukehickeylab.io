@@ -4,192 +4,107 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ASTRAEA · Endometrial Receptivity GRN Atlas</title>
-  <meta name="description" content="ASTRAEA: an interactive atlas of the gene regulatory network of the human endometrium across the cycle and in recurrent implantation failure. Hickey Lab, Duke University.">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23111114'/%3E%3Cpath d='M16 5 L18.2 13.2 L26 16 L18.2 18.8 L16 27 L13.8 18.8 L6 16 L13.8 13.2 Z' fill='%23c792ea'/%3E%3Ccircle cx='24.5' cy='8' r='1.6' fill='%235aa0ff'/%3E%3Ccircle cx='7' cy='24' r='1.3' fill='%23ffa07a'/%3E%3C/svg%3E">
+  <meta name="description" content="ASTRAEA: an interactive atlas of the gene regulatory network of the human endometrium across the menstrual cycle and in recurrent implantation failure. Hickey Lab, Duke University.">
+  <link rel="icon" type="image/svg+xml" href="assets/astraea-mark.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="landing.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <svg class="brand-star" viewBox="0 0 32 32" role="img" aria-label="ASTRAEA">
-        <path d="M16 4 L18.4 13 L27 16 L18.4 19 L16 28 L13.6 19 L5 16 L13.6 13 Z" fill="var(--accent)"/>
-        <circle cx="25" cy="7.5" r="1.7" fill="var(--gained)"/>
-        <circle cx="6.5" cy="24.5" r="1.4" fill="var(--target)"/>
-      </svg>
-      <div>
-        <h1>ASTRAEA <span class="version-pill" title="Demo release, version 1: for review, not for citation">demo_v1</span></h1>
-        <p class="sub" title="Atlas of Single-cell Transcriptional Regulators And Elements of Attachment">Endometrial receptivity GRN atlas · <span id="compartment-label">Stromal</span> cells · Hickey Lab, Duke</p>
-      </div>
-    </div>
-    <nav class="views" aria-label="View">
-      <button class="view-tab active" data-view="rif" title="Healthy (fertile) vs recurrent implantation failure, both at LH+7 (the window of implantation)">Fertile vs RIF · LH+7</button>
-      <button class="view-tab" data-view="woi" disabled title="Coming next: how the network changes across the cycle">Across the cycle <em>soon</em></button>
-    </nav>
-    <button class="help-btn" id="help-open" aria-haspopup="dialog"><span class="badge">?</span>Reading guide</button>
-    <div class="search">
-      <input id="search" type="search" list="gene-list" placeholder="Find a gene, e.g. HAND2" autocomplete="off" spellcheck="false" aria-label="Find a gene">
-      <datalist id="gene-list"></datalist>
-    </div>
-  </header>
+  <canvas id="stars" aria-hidden="true"></canvas>
 
-  <main class="layout">
-    <aside class="panel left" aria-label="Controls">
-      <section>
-        <h2><span class="badge">1</span>Show links from</h2>
-        <div class="seg" id="mode" role="radiogroup" aria-label="Show links from">
-          <button data-v="both" class="on" title="Overlay both networks and colour what changed">Both</button>
-          <button data-v="fertile" title="Only the healthy (fertile) network at LH+7">Fertile only</button>
-          <button data-v="rif" title="Only the RIF network at LH+7">RIF only</button>
-        </div>
-        <p class="hint" id="mode-hint"></p>
-      </section>
+  <main class="hero">
+    <svg class="logo" viewBox="0 0 1140 250" role="img" aria-label="ASTRAEA">
+  <defs>
+    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6ddd3"/><stop offset="0.45" stop-color="#e0b2a4"/><stop offset="1" stop-color="#c17f70"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(126 125)">
+    <circle r="74" fill="none" stroke="url(#ink)" stroke-width="1.6" opacity="0.45"/>
+    <path d="M0 -106 Q 5.5 -11 94 0 Q 5.5 11 0 106 Q -5.5 11 -94 0 Q -5.5 -11 0 -106 Z" fill="url(#ink)"/>
+    <circle cx="0" cy="-99" r="3.6" fill="url(#ink)" opacity="0.85"/>
+    <circle cx="0" cy="99" r="3.6" fill="url(#ink)" opacity="0.85"/>
+  </g>
+  <path d="M258 130 Q 264 121 280 118 Q 264 115 258 106 Q 252 115 236 118 Q 252 121 258 130 Z" fill="url(#ink)" opacity="0.8"/>
+  <text x="318" y="162" font-family="Cinzel, 'Times New Roman', serif" font-size="112" letter-spacing="27" fill="url(#ink)">ASTRAEA</text>
+  <path d="M1084 130 Q 1090 121 1106 118 Q 1090 115 1084 106 Q 1078 115 1062 118 Q 1078 121 1084 130 Z" fill="url(#ink)" opacity="0.8"/>
+</svg>
+    <p class="tagline">The gene regulatory atlas of the receptive endometrium</p>
+    <p class="expand" title="Atlas of Single-cell Transcriptional Regulators And Elements of Attachment">
+      <b>A</b>tlas of <b>S</b>ingle-cell <b>T</b>ranscriptional <b>R</b>egulators <b>A</b>nd <b>E</b>lements of <b>A</b>ttachment
+    </p>
 
-      <section>
-        <h2><span class="badge">2</span>Dot size shows</h2>
-        <div class="seg" id="sizeby" role="radiogroup" aria-label="Dot size shows">
-          <button data-v="fertile" class="on" title="How important the gene is in the fertile network">Fertile</button>
-          <button data-v="rif" title="How important the gene is in the RIF network">RIF</button>
-          <button data-v="delta" title="How much the gene's importance differs between fertile and RIF">Change</button>
-        </div>
-        <p class="hint" id="size-hint"></p>
-      </section>
+    <a class="enter" href="atlas.html">Enter the atlas <span aria-hidden="true">→</span></a>
+    <p class="entry-note">Works on desktop, tablet and phone · best on a larger screen</p>
 
-      <section>
-        <h2><span class="badge">3</span>Dot colour shows</h2>
-        <div class="seg" id="colorby" role="radiogroup" aria-label="Dot colour shows">
-          <button data-v="territory" class="on" title="Which territory (gene group) the gene belongs to">Territory</button>
-          <button data-v="tf" title="Whether the gene is a regulator (transcription factor) or only a target">Role</button>
-          <button data-v="evidence" title="How much published implantation research exists for the gene">Literature</button>
-        </div>
-        <p class="hint" id="color-hint"></p>
-      </section>
+    <ul class="facts">
+      <li><b>1,000</b><span>genes mapped in stromal cells</span></li>
+      <li><b>6</b><span>networks: LH+3 to LH+11, plus RIF</span></li>
+      <li><b>10</b><span>gene territories, each with a hub regulator</span></li>
+    </ul>
 
-      <section>
-        <h2><span class="badge">4</span>Filter by literature</h2>
-        <div class="seg" id="lit" role="radiogroup" aria-label="Filter by literature">
-          <button data-v="off" class="on" title="No literature filter">Off</button>
-          <button data-v="genes" title="Keep only genes already known in implantation research">Known genes</button>
-          <button data-v="edges" title="Keep only links already reported in the literature">Known links</button>
-        </div>
-        <p class="hint" id="lit-hint"></p>
-      </section>
+    <section class="cards">
+      <article>
+        <h2>What it shows</h2>
+        <p>How transcription factors switch genes on and off in the uterine lining, and how that wiring changes across the cycle and in <b>recurrent implantation failure</b>.</p>
+      </article>
+      <article>
+        <h2>How it was built</h2>
+        <p>Single-cell RNA-seq from 28 women, networks inferred per cell type and timepoint with CellOracle, cross-checked with dynGENIE3.</p>
+      </article>
+      <article>
+        <h2>What it adds</h2>
+        <p>Every gene carries its implantation literature from NCBI and PubMed, so known regulators and <b>novel candidates</b> can be told apart at a glance.</p>
+      </article>
+    </section>
 
-      <section class="checks">
-        <h2><span class="badge">5</span>Display</h2>
-        <label><input type="checkbox" id="only-changed"> Only links that change in RIF</label>
-        <label><input type="checkbox" id="show-highways" checked> Roads between territories</label>
-        <label><input type="checkbox" id="show-cross"> All links between territories <span class="muted">(busy)</span></label>
-      </section>
+    <p class="caveat">Links in the atlas are computational predictions, not proven cause and effect.
+      <span class="pill">demo_v1</span> is for review, not for citation.</p>
 
-      <section class="legend-block">
-        <h2><span class="badge">6</span>Legend</h2>
-        <ul class="legend">
-          <li><span class="sw line retained"></span>In both</li>
-          <li><span class="sw line gained"></span>New in RIF</li>
-          <li><span class="sw line lost"></span>Missing in RIF</li>
-          <li><span class="sw road"></span>Road = links between territories</li>
-        </ul>
-        <ul class="legend" id="legend-dots"></ul>
-        <ul class="legend">
-          <li><span class="sw dot absent"></span>Not in LH+7 networks</li>
-        </ul>
-        <p class="hint">Thicker line = stronger link · bigger dot = more important gene</p>
-      </section>
-
-      <section class="stats" id="stats"></section>
-    </aside>
-    <div class="resizer" data-side="left" role="separator" aria-orientation="vertical" aria-label="Resize left panel" tabindex="0" title="Drag to resize · double-click to reset"></div>
-
-    <div class="stage-wrap">
-      <div id="stage" aria-label="Network map"></div>
-      <div class="loading" id="loading">Loading network…</div>
-      <div class="zoom">
-        <button id="zoom-in" aria-label="Zoom in" title="Zoom in">+</button>
-        <button id="zoom-out" aria-label="Zoom out" title="Zoom out">−</button>
-        <button id="zoom-reset" aria-label="Show whole map" title="Show whole map">⤢</button>
-      </div>
-      <p class="stage-tip" id="stage-tip">Hover a gene · click to read · click a territory to zoom</p>
-      <p class="caveat">Links are predictions, not proven cause and effect · <button class="linklike" data-help="limits">Limits of this map</button></p>
-    </div>
-
-    <div class="resizer" data-side="right" role="separator" aria-orientation="vertical" aria-label="Resize right panel" tabindex="0" title="Drag to resize · double-click to reset"></div>
-    <aside class="panel right" aria-label="Details">
-      <div id="detail"></div>
-    </aside>
+    <footer>
+      <span>Hickey Lab · Department of Biomedical Engineering · Duke University</span>
+      <span class="dot" aria-hidden="true">·</span>
+      <a href="https://github.com/auggiepoysungnoen/Endometrial_Receptivity_GRN_Demo_V1">Source &amp; methods</a>
+    </footer>
   </main>
 
-  <dialog id="help" aria-labelledby="help-title">
-    <div class="help-body">
-      <button class="help-close" id="help-close" aria-label="Close">×</button>
-      <p class="guide-kicker">ASTRAEA · Stromal cells · Fertile vs RIF · LH+7</p>
-      <h2 id="help-title">Reading Guide in 5 Steps</h2>
-
-      <ol class="guide">
-        <li class="gcard">
-          <span class="badge">1</span>
-          <svg viewBox="0 0 64 40" aria-hidden="true"><line x1="14" y1="20" x2="46" y2="20" class="g-both"/><path d="M42 15 L50 20 L42 25" class="g-arrow"/><circle cx="12" cy="20" r="7" class="g-tf"/><circle cx="53" cy="20" r="5" class="g-tg"/></svg>
-          <h3>Dots & lines</h3>
-          <p>Dot = gene. Line = predicted link, regulator → target.</p>
-        </li>
-        <li class="gcard">
-          <span class="badge">2</span>
-          <svg viewBox="0 0 64 40" aria-hidden="true"><circle cx="32" cy="20" r="18" class="g-halo"/><circle cx="32" cy="20" r="5" class="g-tf"/><circle cx="20" cy="12" r="2.5" class="g-tg"/><circle cx="44" cy="14" r="2.5" class="g-tg"/><circle cx="24" cy="30" r="2.5" class="g-tg"/><circle cx="42" cy="29" r="2.5" class="g-tg"/></svg>
-          <h3>Territories</h3>
-          <p>Gene groups around a hub. Closer = more connected.</p>
-        </li>
-        <li class="gcard">
-          <span class="badge">3</span>
-          <svg viewBox="0 0 64 40" aria-hidden="true"><line x1="8" y1="10" x2="56" y2="10" class="g-both"/><line x1="8" y1="20" x2="56" y2="20" class="g-new"/><line x1="8" y1="30" x2="56" y2="30" class="g-lost"/></svg>
-          <h3>Line colours</h3>
-          <p><span class="k-both">Grey</span> both · <span class="up">blue</span> new in RIF · <span class="down">red</span> missing in RIF</p>
-        </li>
-        <li class="gcard">
-          <span class="badge">4</span>
-          <svg viewBox="0 0 64 40" aria-hidden="true"><circle cx="26" cy="18" r="8" class="g-tf"/><circle cx="26" cy="18" r="12" class="g-ring"/><path d="M34 22 L34 38 L38 34 L42 40 L45 38 L41 32 L47 31 Z" class="g-cursor"/></svg>
-          <h3>Hover & click</h3>
-          <p>Hover to light up links. Click a gene or territory for details.</p>
-        </li>
-        <li class="gcard">
-          <span class="badge">5</span>
-          <svg viewBox="0 0 64 40" aria-hidden="true"><line x1="10" y1="12" x2="54" y2="12" class="g-track"/><circle cx="24" cy="12" r="4" class="g-knob"/><line x1="10" y1="28" x2="54" y2="28" class="g-track"/><circle cx="42" cy="28" r="4" class="g-knob"/></svg>
-          <h3>Panels</h3>
-          <p>Left: choose what to show. Right: read about genes.</p>
-        </li>
-      </ol>
-
-      <div class="guide-more">
-        <details>
-          <summary>Glossary</summary>
-          <dl class="glossary">
-            <dt>RIF</dt><dd>Recurrent implantation failure</dd>
-            <dt>LH+7</dt><dd>Window of implantation (7 days after LH surge)</dd>
-            <dt>Regulator (TF)</dt><dd>Transcription factor: switches genes on/off</dd>
-            <dt>Importance</dt><dd>How central a gene is (eigenvector centrality)</dd>
-            <dt>Link strength</dt><dd>Model estimate: + on, − off</dd>
-            <dt>Known link</dt><dd>Also reported in experiments (CollecTRI)</dd>
-            <dt>Confirmed by 2 methods</dt><dd>Key regulator in CellOracle and dynGENIE3</dd>
-            <dt>Novel candidate</dt><dd>Central here, little research: a lead</dd>
-          </dl>
-        </details>
-        <details id="help-limits">
-          <summary>Limits of this map</summary>
-          <ul class="help-limits">
-            <li>Links are predictions from expression, not experiments.</li>
-            <li>One biopsy per woman; RIF sampled only at LH+7 and pooled.</li>
-            <li>Territories are an algorithmic grouping, not proven pathways.</li>
-            <li>Literature is collected automatically; "Draft" notes await lab review.</li>
-          </ul>
-        </details>
-      </div>
-      <button class="help-done" id="help-done">Start exploring →</button>
-    </div>
-  </dialog>
-
-  <script src="https://cdn.jsdelivr.net/npm/graphology@0.26.0/dist/graphology.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sigma@3.0.3/dist/sigma.min.js"></script>
-  <script src="app.js"></script>
+  <script>
+    // Slow starfield behind the logo; skipped for reduced-motion and drawn once
+    // per resize, so it costs nothing on phones.
+    (function () {
+      const c = document.getElementById("stars"), x = c.getContext("2d");
+      const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let stars = [], w = 0, h = 0, raf = null;
+      function seed() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        w = c.width = Math.round(innerWidth * dpr);
+        h = c.height = Math.round(innerHeight * dpr);
+        c.style.width = innerWidth + "px"; c.style.height = innerHeight + "px";
+        const n = Math.min(220, Math.round((innerWidth * innerHeight) / 9000));
+        stars = Array.from({ length: n }, () => ({
+          x: Math.random() * w, y: Math.random() * h,
+          r: (Math.random() * 1.1 + 0.3) * dpr,
+          a: Math.random() * 0.5 + 0.2, t: Math.random() * Math.PI * 2,
+          s: Math.random() * 0.6 + 0.2,
+        }));
+      }
+      function draw(now) {
+        x.clearRect(0, 0, w, h);
+        for (const st of stars) {
+          const tw = still ? st.a : st.a * (0.65 + 0.35 * Math.sin(st.t + now / 1000 * st.s));
+          x.globalAlpha = tw;
+          x.fillStyle = "#e9d6cf";
+          x.beginPath(); x.arc(st.x, st.y, st.r, 0, Math.PI * 2); x.fill();
+        }
+        x.globalAlpha = 1;
+        if (!still) raf = requestAnimationFrame(draw);
+      }
+      function start() { if (raf) cancelAnimationFrame(raf); seed(); draw(performance.now()); }
+      addEventListener("resize", start);
+      start();
+    })();
+  </script>
 </body>
 </html>

@@ -1,0 +1,258 @@
+PROGRESS LOG -- interactive GRN website (local development)
+===========================================================
+Append-only. Newest entry at the bottom. Each entry: date, what changed,
+what was decided, what is next.
+
+[2026-09-18] Created local_host_development/
+--------------------------------------------
+- Created local_host_development/ with:
+    script/serve_local.sh      local static server (python3 http.server,
+                               127.0.0.1:8000 by default) rooted at
+                               Nandini_Website/ so data/ and figures/ resolve
+    workflow/aesthetic_design.txt  palette + visual encoding taken from
+                               code/_style.py and code/05_network_maps.py
+    workflow/functionality.txt     feature list (MUST/SHOULD/COULD),
+                               scientific guardrails, technical plan
+    workflow/progress.txt          this log
+- No site code written yet. No data or pipeline files touched.
+
+NEXT
+----
+1. Choose the graph library (d3-force / Cytoscape.js / sigma.js).
+2. Decide where the site source lives (e.g. Nandini_Website/site/ with
+   index.html) and the GitHub repo/Pages setup.
+3. Build the MUST items in functionality.txt for one compartment (Stromal,
+   the densest and best-validated) and compare against
+   figures/05_network_maps/*_stromal.png.
+4. Extend to the other four compartments; handle the Tcell no-dynGENIE3 case.
+
+[2026-09-18] Design decisions: Obsidian-style territories, Stromal first
+-----------------------------------------------------------------------
+- Checked the Stromal data: ~670 genes / 2,000 edges per group; Fertile
+  union ~983 genes / 5,303 edges; Fertile vs RIF LH+7 = 1,425 retained,
+  575 gained, 575 lost; consecutive steps retain 836-1,123 of 2,000 edges.
+  Top LH+7 regulators by out-degree: ZEB1 123, TCF12 87, WT1 77, EBF1 77,
+  KLF12 64, TCF7L2 55.
+- Decided (user):
+    Territories = network modules inside Stromal (not cell compartments,
+      since there are no real edges between compartments); hub TF at each
+      territory centre; highways = real edges between modules.
+    Fertile vs RIF = one merged graph, edges colored retained/gained/lost,
+      with a Fertile / RIF / Both toggle.
+    LH+3 -> LH+11 = scrubber over one fixed layout from the union graph.
+    Look = Obsidian-like, dark.
+- Recorded in aesthetic_design.txt section 7 and functionality.txt section 7.
+
+NEXT
+----
+1. Build-time script: Stromal union graph -> modules -> hubs -> fixed layout
+   -> JSON (run in the celloracle_grn env for python-igraph).
+2. Pick the renderer (sigma.js+graphology vs force-graph) with a quick
+   prototype of the merged Fertile-vs-RIF view.
+3. Add the LH+3 -> LH+11 scrubber on the same layout.
+
+[2026-09-18] First working prototype: Stromal Fertile LH+7 vs RIF LH+7
+----------------------------------------------------------------------
+- script/build_territory_graph.py (new): union of the 6 CellOracle groups ->
+  Leiden modules (resolution 1.0, seed 42, modules < 12 genes merged) ->
+  hub TF per module (largest within-module weighted degree) -> fixed layout
+  (module centres by force layout + overlap removal; each module a disk with
+  its hub at the centre) -> site/data/stromal_graph.json (457 KB).
+  Checks that presence/absence in the union table reproduces all 5 exported
+  edge-diff files exactly (it does).
+  Ran with ~/anaconda3/envs/rapids_singlecell/bin/python (celloracle_grn env
+  is not on this machine; igraph 1.0.0 + leidenalg 0.12.0 there).
+- Stromal result: 1,000 genes, 5,556 union edges, 10 territories:
+  ZEB1 192, REL 167, FOS 143, EBF1 102, ESR1 101, MEF2A 98, FOXO1 71,
+  MEIS1 52, ID4 41, STAT1 33.
+- site/ (new): index.html + style.css + app.js; sigma.js 3.0.3 + graphology
+  0.26.0 from jsdelivr. Dark Obsidian-style map:
+    territory halos + titles; highways between territories drawn as curved
+      roads split into lost | retained | gained lanes (overview: each
+      territory's 3 strongest links; select a territory to see all);
+    Network toggle Both / Fertile / RIF; node size Fertile / RIF / |delta|
+      eigenvector centrality; node color territory or TF/target;
+    filters: only changed edges, highways, individual cross-territory
+      edges, paper's curated genes only;
+    hover = gene + neighbours light up, rest dims; click pins; drag with
+      spring-back; search (press / to focus); Esc clears;
+    right panel: territory list (+gained / -lost), territory detail
+      (inside/touching counts, highways, biggest centrality shifts), gene
+      detail (tags incl. dual-validated, centrality/degree Fertile vs RIF,
+      regulates / regulated-by lists with coef Fertile -> RIF).
+- Verified in headless Chromium (Playwright, scratchpad only): no console
+  errors; overview, territory zoom, gene search, hover, delta/TF modes.
+- Fixed during testing: premultiplied edge alpha (faint gray edges were
+  stacking to white), highway clutter, halo titles clipped at the frame.
+- serve_local.sh now prints the site URL.
+
+NEXT
+----
+1. User review of the look/feel in a real browser.
+2. LH+3 -> LH+11 scrubber view on the same layout (data already in the JSON).
+3. Other compartments (rerun the build script per compartment; Tcell has no
+   dynGENIE3 -> dual-validated shows n/a, already handled).
+
+[2026-09-19] Literature layer, interaction-based territory layout, validation
+-----------------------------------------------------------------------------
+Requests: (1) brief explanation of each TF/target in implantation when
+clicked; (2) replace "paper's curated genes" with literature-supported
+network/candidates; (3) territory positions should reflect interactions;
+(4) validate everything before finalising.
+
+(1)+(2) Literature layer -- script/build_gene_annotations.py (stdlib only):
+  - Sources (all public, cached in local_host_development/.cache/, 96 MB,
+    do NOT share this folder -- it is re-downloadable):
+      NCBI RefSeq gene summaries (MyGene.info), NCBI GeneRIF statements,
+      NCBI Gene->PubMed links filtered by an implantation/decidua query,
+      CollecTRI TF->target literature (OmniPath).
+  - 2,265 genes (all 5 compartments). Stromal tiers: strong (>=10 papers) 22,
+    moderate (3-9) 54, limited (1-2) 153, none 771. Top: HOXA10 105, PAEP 78,
+    FOXO1 58, STAT3 41, PGR 32, HOXA11 26 -- matches known receptivity biology.
+  - GeneRIF classifier: first version let through non-reproductive hits
+    ("aortic valve implantation", "flow diverter implantation", "deciduous
+    teeth", "endometrial stromal sarcoma"); tightened (implantation/receptivity
+    only with a reproductive-context word, "deciduous" excluded, "implantation
+    failure" always counts); regression-tested.
+  - Paper-count audit: 221/228 recent paper titles behind moderate/strong
+    genes are reproductive; the 7 others are PubMed-MeSH-indexed to
+    implantation/decidua (one clear miss: KLF12 colorectal cancer paper).
+    Tiers are labelled as automated counts, not manual review.
+  - curation/implantation_gene_notes.csv: 36 draft notes (hubs, paper-figure
+    genes, drivers, classic decidualization TFs) with 86 citations; the build
+    fails unless every cited PMID is linked to that gene in NCBI. HPSE2 left
+    without a note (its only GeneRIF concerns HPSE, a different gene).
+  - CollecTRI: 647 network edges (all compartments) literature-supported;
+    one reference-less CollecTRI row (SP1>MT2A) excluded. Stromal: 145 of
+    the 2,575 Fertile/RIF LH+7 edges.
+  - UI: gene panel "About" (name, evidence tier, draft note + PubMed links,
+    or GeneRIF statements, or "Novel candidate"); NCBI function, recent
+    papers, other-endometrium findings collapsible; "lit +/-" badges on
+    edges; Node colour "Evidence"; "Literature support: All | Genes | Edges"
+    filter (replaces "Paper's curated genes only"); right panel lists
+    "Known implantation regulators" and "Novel candidates" (hubs/drivers
+    with <3 implantation papers).
+
+(3) Territory placement -- build_territory_graph.py:
+  - Affinity a_ij = w_ij / sqrt(S_i S_j) (size-independent); target distance
+    = touching distance + spread*(1 - a/amax)^1.5; SMACOF stress
+    majorisation; push-only overlap removal.
+  - Spearman(affinity, edge-to-edge gap): old layout -0.42 -> new -0.78
+    (centre distance -0.36 -> -0.70). TERRITORY_SPREAD=6 chosen by sweep
+    (8 gives -0.80 but ~40% more empty area).
+
+(4) Validation -- script/validate_site.py (44 checks) +
+    script/tests/browser_smoke.js (19 checks); both pass; report in
+    workflow/validation_report.txt. Checks everything against the ORIGINAL
+    data/ exports (edges/coefs, all 5 diff files edge-by-edge, centrality,
+    flags, ranks, dual-validation), territory geometry + recomputed placement
+    rho, literature tiers/classifier/citations (incl. a negative test that a
+    fake PMID is rejected), CollecTRI re-derived from the raw download, site
+    files, CDN reachability, and in-browser numbers/filters/panels/phone width.
+  - Bugs found by validation and fixed:
+      * selection ring left on screen after deselecting (sigma only repaints
+        its highlight layer on hover) -> own selection layer, repainted on
+        every state change;
+      * under GPU-accelerated 2D canvas (headless SwiftShader) cleared overlay
+        canvases re-showed a stale frame -> overlay layers use CPU-backed
+        contexts (willReadFrequently); confirmed by A/B with
+        --disable-accelerated-2d-canvas;
+      * reference-less CollecTRI edge counted as literature (above).
+
+NOT DONE / NEXT
+  - Nothing is deployed/published; site runs locally only.
+  - Lab review of the 36 draft notes (see curation/README.txt).
+  - LH+3 -> LH+11 scrubber view; other compartments' territory maps.
+  - Offline bundle (vendored JS) + launchers for sharing.
+
+[2026-09-19] Clarity pass (user: "buttons and annotation not easy to understand")
+--------------------------------------------------------------------------------
+- Audience assumed: scientists/clinicians who are not network specialists.
+- One vocabulary everywhere: gene = dot, link = line (regulator -> target),
+  territory, road, importance (= eigenvector centrality), "in both" /
+  "new in RIF" / "missing in RIF". Jargon removed from labels (|Δ|,
+  coef_mean, WOI driver, dual-validated, lit+, highways, edges) and kept
+  only as secondary text in tooltips/glossary.
+- Left panel: numbered steps (1 Show links from, 2 Dot size shows,
+  3 Dot colour shows, 4 Filter by literature), each with a hint that
+  changes with the choice; "Display" checkboxes reworded; legend grouped
+  into Lines / Roads / Dots with a dot legend that follows the colour mode.
+- "? How to read this map" dialog (opens once on first visit; remembered in
+  localStorage): diagram, 5 steps, glossary, "What this map can't tell you".
+- Gene panel reorganised per user request into:
+  1 Name (alternative names) -- aliases/other names added from NCBI via
+    MyGene (cache now .cache/mygene_v2.json);
+  2 Function in implantation / receptivity -- draft note with sources, or
+    pointer to findings, or "Novel candidate";
+  3 General function -- NCBI RefSeq summary with Read more;
+  4 Literature findings / experiments -- evidence tier, papers behind the
+    summary, NCBI GeneRIF findings, experimentally reported links in this
+    map (CollecTRI), latest papers, other uterine-lining findings.
+  Then "In this network": tags in plain words, importance / number of links
+  (Fertile, RIF, Change), "Genes it controls" / "Genes that control it" with
+  column headers and a mini legend; signed link strengths (+ on / − off).
+- Right-panel lists got column headers; territory detail reworded.
+- Validation: python 44/44, browser 26/26 (new checks: guide opens once and
+  closes, every control has an explanation, four gene sections in order,
+  alternative names shown).
+
+[2026-09-19] Less text, standard card style, draggable sidebars
+---------------------------------------------------------------
+User: reduce text, compartmentalise sections with lines, draggable left and
+right sidebars; use A/B/C/D; standardised styles are very important; liked
+the filled purple lettered badge.
+- One card style for every block in both panels: white hairline outline
+  (--line), header strip with the same filled purple badge, uppercase title.
+  Left panel cards numbered 1-7 (steps 1-4, Display, Legend, Currently
+  shown); right panel cards lettered (gene: A Name, B Function in
+  implantation, C General function, D Literature [+ evidence badge in the
+  header], E In this network, F Gene links; overview A-C; territory A-C).
+- Gene cards A-D are collapsible (A, B open; C, D closed by default); the
+  open/closed choice carries over between genes.
+- Text cut: hints are short phrases, explanations moved into tooltips,
+  single mini-legend, one-line legend, shorter captions.
+- Draggable panel edges (pointer + keyboard arrows; double-click/Home
+  resets; widths saved per browser); map canvas follows via ResizeObserver.
+- Fixed: an old .panel h2 rule overriding the card header; default <dd>
+  margins clipping the Change column.
+- Validation: python 44/44, browser 34/34 (new: badges 1-7 / A-F, identical
+  badge style both sides, drag widens panels and map follows, widths
+  persist, double-click reset).
+
+[2026-09-19] PMID-only citations, Reading Guide in 5 Steps, tier colours
+------------------------------------------------------------------------
+- Citations are hyperlinks labelled "PMID <id>" only; removed the written-out
+  "Sources of the summary" list (titles/journals); "Latest papers" is a row
+  of PMID links.
+- Help dialog replaced by "Reading Guide in 5 Steps": five numbered cards
+  with small illustrations (Dots & lines, Territories, Line colours, Hover &
+  click, Panels; 67 words total) + collapsible Glossary and Limits; top-bar
+  button "Reading guide"; "Limits of this map" link opens that section.
+- Evidence tiers now distinct hues: strong #4ade80 green, moderate #facc15
+  yellow, limited #fb923c orange, none #52525b grey (was one amber ramp).
+- Validation: python 44/44, browser 40/40 (new: guide title + 5 cards +
+  word budget, limits deep link, 4 distinct tier colours, PMID-only links,
+  no reference list).
+
+[2026-09-19] Sidebar defaults 350 px
+------------------------------------
+- Left and right sidebar default width both 350 px (LIMITS in app.js; CSS
+  fallbacks aligned, incl. the <1100 px layout). Limits unchanged: left
+  190-480, right 260-620. Browser suite 40/40.
+demo_v1: header pill + page title
+
+[2026-09-19] demo_v1 published + handoff for Nandini
+----------------------------------------------------
+- Pushed to https://github.com/auggiepoysungnoen/Endometrial_Receptivity_GRN_Demo_V1
+  (public; commit c647c7b, tag demo_v1; author Koravit Poysungnoen
+  <august.poysungnoen@duke.edu>) via a repo-scoped deploy key
+  (~/.ssh/grn_demo_v1_deploy on this machine). Excluded: data/, figures/,
+  .cache/, non-stromal annotation files.
+- GitHub Pages via Actions workflow (.github/workflows/pages.yml); live at
+  https://auggiepoysungnoen.github.io/Endometrial_Receptivity_GRN_Demo_V1/ ;
+  browser suite 40/40 against the live URL.
+- Added HANDOFF.md, requirements.txt, environment.yml (versions verified on
+  PyPI + conda-forge). Tested the handoff on a fresh clone + copied data/:
+  validator 42/42 + 2 SKIP (cache-dependent checks now skip with a hint
+  instead of crashing), territory rebuild byte-identical to the committed
+  graph, site served from repo root 40/40.

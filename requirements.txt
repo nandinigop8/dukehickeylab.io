@@ -1,0 +1,14 @@
+# Python packages for the site's build scripts (Python >= 3.10).
+#   pip install -r requirements.txt
+#
+# Only build_territory_graph.py needs these. build_gene_annotations.py and
+# validate_site.py use the standard library only. The site itself needs no
+# Python at all (static HTML/JS).
+#
+# Versions that produced demo_v1. Leiden community detection can differ
+# slightly between versions, so keep these pins to reproduce the same
+# territories exactly.
+pandas==2.3.3
+numpy==2.2.6
+igraph==1.0.0
+leidenalg==0.12.0

@@ -1,0 +1,141 @@
+AESTHETIC DESIGN -- interactive GRN website
+===========================================
+Visual rules for the site. Starting point is the static figures'
+style (code/_style.py, code/05_network_maps.py) so the site and the paper
+read as one system. Edit this file as design decisions are made.
+
+1. PALETTE (from code/_style.py -- keep hex values identical)
+--------------------------------------------------------------
+Nodes
+  Transcription factor (TF) fill ..... #4a3aa7  (violet; same in every compartment)
+  Target-only gene fill .............. #FFA07A  (light salmon)
+  Isolated in this view .............. #c3c2b7  (muted gray; smaller, muted label)
+  Node outline ....................... #ffffff  (white, ~1.3px)
+
+Edges
+  Default / retained ................. #c3c2b7
+  Gained in RIF ...................... #2a78d6  (blue, DIVERGING_HIGH)
+  Lost from Fertile .................. #e34948  (red, DIVERGING_LOW)
+  Neutral midpoint (diverging scales). #f0efec
+
+Conditions
+  Fertile ............................ #2a78d6
+  RIF ................................ #eb6834
+
+Compartments (tabs / badges / accents -- always with a text label, never color alone)
+  Epithelial ......................... #1baf7a
+  Stromal ............................ #4a3aa7
+  Tcell .............................. #eda100
+  uNK ................................ #e87ba4
+  ActivatedNK ........................ #008300
+  (red #e34948 is reserved for "lost" edges -- do not use it as a compartment color)
+
+Ink / chrome
+  Primary text ....................... #0b0b0b
+  Secondary text ..................... #52514e
+  Muted text ......................... #898781
+  Gridlines .......................... #e1e0d9
+  Baseline / borders ................. #c3c2b7
+  Page surface ....................... #fcfcfb
+
+Sequential ramp (magnitude, e.g. centrality or importance heat):
+  #cde2fb -> #2a78d6 -> #0d366b  (13 steps listed in _style.py SEQUENTIAL_BLUE)
+
+2. VISUAL ENCODING (must match the paper figures)
+-------------------------------------------------
+- Node = gene. Arrow points regulator -> target.
+- Node size:
+    CellOracle views ... eigenvector_centrality for the selected group
+    dynGENIE3 view ..... aggregate importance summed over ALL of the gene's
+                         target edges (full table, not only drawn edges)
+- Edge width:
+    CellOracle ......... |coef_mean| (coef_abs), scaled to ~0.8-6 px
+    dynGENIE3 .......... importance, same scaled range
+- Edge color: flat gray in WOI view; gained/lost/retained only in the
+  Fertile-vs-RIF view.
+- Optional extra (site only): encode coef_mean sign (activating vs.
+  repressing), e.g. arrowhead vs. bar end. If added, label it as the sign of
+  a ridge-regression coefficient, not measured biochemistry.
+- Labels: TF labels bold; isolated-node labels smaller and muted; labels on a
+  semi-transparent white backing so they stay legible over edges.
+
+3. TYPOGRAPHY
+-------------
+- Sans-serif stack: Inter / "DejaVu Sans" / Arial / Helvetica / sans-serif.
+- Gene symbols are case-sensitive and must never be auto-capitalised or
+  hyphen-broken (e.g. "HLA-DRA", "C11orf96"); consider a tabular/mono face for
+  numeric tables.
+
+4. LAYOUT AND TONE
+------------------
+- Clean, light, publication-like. Warm off-white surface (#fcfcfb), not pure
+  white; no heavy shadows or gradients.
+- Graph canvas is the hero; controls (compartment, view, timepoint, gene
+  search, "curated vs. expanded") sit in a compact bar or side panel.
+- Detail panel for a clicked gene/edge rather than tooltips crammed with data.
+- A persistent, short caveat line near the graph (see functionality.txt,
+  "Scientific guardrails"); full caveats on an About/Methods page.
+- Must work at phone width (graph pans/zooms; controls stack), but desktop is
+  the primary target.
+
+5. ACCESSIBILITY
+----------------
+- Every color-coded item also has a legend entry or text label.
+- Gained/lost edges: consider a second cue (dash pattern) for colorblind
+  users, since blue/red is the only difference.
+- Keyboard-reachable controls; visible focus states.
+- Dark theme is the primary look (decision 2026-09-18, section 7). The source
+  palette was validated for light mode only -- re-check contrast of every
+  node/edge color on the dark canvas before finalising.
+
+6. OPEN DESIGN QUESTIONS
+------------------------
+- Graph library: d3-force vs. Cytoscape.js vs. sigma.js (WebGL, better for
+  thousands of edges).  [still open -- see functionality.txt section 7]
+- [DECIDED 2026-09-18] WOI timepoints: one at a time with a scrubber over a
+  fixed layout, not side-by-side small multiples.
+- Site name, header, and whether to show lab/paper branding.
+
+7. DECISIONS 2026-09-18 -- "Obsidian graph view" style, Stromal first
+---------------------------------------------------------------------
+Overall look: Obsidian-like, DARK.
+  - Dark canvas; small glowing dots for genes; thin, faint edges by default.
+  - Hover/select a gene: it and its direct neighbours light up, everything
+    else dims (~10-15% opacity). This is the main way to read the dense graph.
+  - Gentle live physics (nodes settle, can be dragged, spring back).
+
+Territories (= network modules inside ONE compartment, Stromal first):
+  - Each module is a "territory": a soft, translucent colored halo/blob
+    (convex hull or density contour) behind its nodes, with the module's
+    top hub gene sitting at the territory's centre, labelled large.
+  - Hub gene = highest-centrality TF in that module (expected: ZEB1, TCF12,
+    WT1, EBF1, KLF12, TCF7L2, ... -- confirm once modules are computed).
+  - "Highways" = the real regulatory edges that connect different modules,
+    drawn as bundled/thicker curved paths between territories. Within-module
+    edges stay thin and faint.
+  - Territory colors: a categorical set, distinct from the edge-status colors
+    (blue = gained, red = lost, gray = retained must stay unambiguous).
+    Territory color is for identity only and always paired with the hub
+    label.
+
+Node color on dark canvas (tentative, to validate):
+  - TF vs target-only: keep the paper's meaning, but lift the colors so they
+    read on a dark background (e.g. TF violet lightened from #4a3aa7; target
+    salmon #FFA07A likely fine). Alternatively color nodes by territory and
+    show TF status with shape/outline -- decide in the prototype.
+Edge status on dark canvas (tentative): gained #2a78d6 -> lighter blue,
+  lost #e34948 -> lighter red, retained -> low-opacity gray.
+
+Dark tokens (starting values, to validate):
+  canvas #111114 | panel #1b1b20 | border #2c2c33
+  text primary #ececef | secondary #a9a8b0 | muted #6f6e76
+
+8. ADDITIONS 2026-09-19
+-----------------------
+- Evidence colour ramp (ordinal, amber, light = more evidence on dark bg):
+  strong #ffd479 | moderate #d49a3a | limited #8a6d3b | none #4a4a52.
+  Kept away from the blue/red edge-status colours.
+- Curated note card: left border in moderate amber; status label
+  "Draft · pending lab review" (amber) or "Reviewed · <name>" (green).
+- Edge literature badge: "lit +" green / "lit −" red outline / "lit" neutral.
+- Selection ring drawn on its own overlay layer (2px white + faint outer).

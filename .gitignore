@@ -1,0 +1,11 @@
+# Exported CellOracle/dynGENIE3 results used by the build scripts.
+# Unpublished + large: keep locally, copy from the lab's analysis workspace.
+/analysis_data/
+
+# Re-downloadable NCBI / CollecTRI downloads (~96 MB)
+/.cache/
+
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store

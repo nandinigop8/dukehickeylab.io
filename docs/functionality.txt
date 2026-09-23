@@ -1,0 +1,154 @@
+FUNCTIONALITY -- interactive GRN website
+========================================
+What the site must do, built on the data in ../../data/ (see
+../../METHODS_AND_DATA_GUIDE.md for every column). Priorities:
+MUST = first working version, SHOULD = next, COULD = later.
+
+1. DATA SOURCES (read-only, already exported -- no pipeline reruns)
+--------------------------------------------------------------------
+  data/tf_list.csv                                   TF membership (shared)
+  data/<comp>/network_snapshots.json|csv             CellOracle edges, 6 groups
+  data/<comp>/node_centrality.json|csv               per-gene, per-group centrality
+  data/<comp>/curated_hub_genes.csv                  the paper figure's gene set
+  data/<comp>/top_WOI_regulators_ranked.csv          top-20 WOI drivers
+  data/<comp>/top_RIF_regulators_ranked.csv          top-20 RIF drivers
+  data/<comp>/fertile_vs_rif_edge_diff.csv           gained/lost/retained edges
+  data/<comp>/consecutive_timepoint_edge_diffs/*.csv 4 consecutive-pair diffs
+  data/<comp>/dyngenie3_importances_top100.csv       dynGENIE3 (default load)
+  data/<comp>/dyngenie3_importances_full.csv         ~30 MB -- lazy-load only, or not at all
+  <comp> = epithelial | stromal | tcell | unk | activatednk
+  Tcell has NO dyngenie3_* files.
+
+2. CORE VIEWS
+-------------
+MUST  Compartment selector (5 compartments).
+MUST  View 1 -- WOI trajectory (CellOracle): Fertile LH+3, +5, +7, +9, +11.
+      One consistent layout across timepoints so genes do not jump.
+MUST  View 2 -- Fertile vs RIF at LH+7 (CellOracle): edges colored
+      gained in RIF / lost from Fertile / retained.
+MUST  View 3 -- dynGENIE3 (continuous, Fertile-only). Hidden/disabled for
+      Tcell with an explanation (pseudotime failed the rho >= 0.3 gate).
+MUST  Default gene set = curated_hub_genes.csv (reproduces the paper figure).
+SHOULD "Expand" control: add top-20 ranked regulators, then the N strongest
+      neighbours of a selected gene, then full network with a threshold
+      slider (edge strength / top-K edges) so the browser never draws
+      thousands of edges at once.
+COULD Side-by-side small multiples of all 5 timepoints (paper-style).
+
+3. INTERACTION
+--------------
+MUST  Pan / zoom; drag nodes.
+MUST  Hover/click a gene: highlight its incoming and outgoing edges; detail
+      panel with TF status, centrality in the current group, rank in the
+      WOI/RIF driver lists, dual-validated flag, top regulators/targets.
+MUST  Click an edge: source, target, coef_mean (signed), p, -logp (or
+      dynGENIE3 importance), and gained/lost/retained status where relevant.
+MUST  Gene search box (case-insensitive match, exact symbol display).
+SHOULD Timepoint scrubber / play button for the WOI view.
+SHOULD Filters: TFs only; hide isolated nodes; minimum |coef|.
+SHOULD Shareable URL state (compartment, view, timepoint, selected gene).
+COULD Download current view as PNG/SVG and the visible edges as CSV.
+COULD Driver-ranking table view (sortable) linked to the graph.
+
+4. SCIENTIFIC GUARDRAILS (non-negotiable; guide section 6)
+-----------------------------------------------------------
+- Edges are "plausible regulatory relationships", not proven/causal.
+- RIF exists ONLY at LH+7. Never place RIF on the WOI timeline.
+- dynGENIE3 is Fertile-only; no RIF comparison from dynGENIE3.
+- Tcell: dual-validated reads "not applicable", never "false".
+- Epithelial dynGENIE3 results shown with a visible lower-confidence note
+  vs. Stromal; uNK/ActivatedNK weaker still.
+- Never compare network size across compartments (cell counts differ ~4x).
+- Gained/lost RIF edges come from pooled networks, not per-subject tests --
+  word as "observed in the pooled network".
+- Keep the method label (CellOracle vs dynGENIE3) visible on every view.
+
+5. TECHNICAL
+------------
+- Static site (plain HTML/CSS/JS, or a small build step) deployable to
+  GitHub Pages; no server-side code.
+- Local dev: ../script/serve_local.sh serves Nandini_Website/ at
+  http://127.0.0.1:8000/ so relative fetches to data/ work.
+- Load per-compartment data on demand (only the selected compartment).
+- Layout: compute one force layout per compartment from the union of edges
+  across all groups, then hold positions fixed while filtering per view.
+  Consider precomputing layouts at build time for speed.
+- Performance target: smooth interaction at ~500 visible edges; hard cap on
+  drawn edges with a clear "showing X of Y" message.
+- Large files (dyngenie3_importances_full.csv, ~51 MB of PNGs) may need
+  trimming or Git LFS before pushing to GitHub (100 MB per-file limit;
+  Pages repo soft limit ~1 GB).
+
+6. OUT OF SCOPE (for now)
+-------------------------
+- Perturbation / knockout simulations (not exported).
+- Single-cell expression plots (not exported).
+- Any re-fitting or new statistics.
+
+7. DECISIONS 2026-09-18 -- two focus views, Stromal first
+---------------------------------------------------------
+Scope: build for STROMAL only first (densest, best-validated compartment;
+~670 genes / 2,000 edges per group; union of all 6 groups ~1,000 genes).
+Then generalise to the other 4 compartments.
+
+A. Territories (modules)
+   - Precompute ONCE per compartment, at build time (Python), not in the browser:
+       1. Union graph of all 6 CellOracle groups (5 Fertile + RIF LH+7).
+       2. Community detection (Leiden or Louvain, fixed seed, undirected,
+          weight = coef_abs). python-igraph is already in the celloracle_grn env.
+       3. Hub per module = highest-centrality TF in it.
+       4. Force layout with module-aware placement: territory centres spread
+          apart, hub pinned at its territory centre, members around it.
+       5. Write a small JSON: gene -> module, x, y, is_hub; module -> hub,
+          colour, centre.
+   - Using the union graph means territories and positions are IDENTICAL in
+     both views and across every timepoint -- nothing jumps.
+   - Modules are a visualisation aid (an algorithmic grouping), not a
+     biological result; say so in the About/Methods text.
+   - Tiny modules (e.g. < 5 genes) merge into an "other" territory.
+
+B. View 1 -- Fertile LH+7 vs RIF LH+7, full network, ONE MERGED GRAPH
+   - All edges from both networks on the fixed layout, colored:
+       retained (both) gray | gained in RIF blue | lost from Fertile red.
+     Source: fertile_vs_rif_edge_diff.csv (Stromal: 1,425 retained,
+     575 gained, 575 lost).
+   - Toggle: Fertile only | RIF only | Both (differences).
+   - Node size switchable Fertile / RIF eigenvector centrality; optional
+     "change" mode sized by |delta|.
+   - Panel listing the top modules/hubs by number of gained/lost edges.
+
+C. View 2 -- Fertile LH+3 -> LH+11 transition, SCRUBBER + FIXED LAYOUT
+   - Slider / play button over LH+3, +5, +7, +9, +11.
+   - At each step, show that timepoint's 2,000 edges; node size = that
+     timepoint's eigenvector centrality; genes absent at that timepoint dim.
+   - On step change: edges gained vs the previous step flash blue, lost
+     edges flash red and fade (consecutive_timepoint_edge_diffs/*.csv).
+     Stromal turnover is high (836-1,123 edges retained per step), so the
+     flash should be brief and optional ("highlight changes" toggle).
+   - RIF never appears on this timeline.
+
+D. Rendering
+   - ~1,000 nodes / ~2,500-5,300 edges -> needs WebGL for smooth
+     Obsidian-style interaction. Leading candidates: sigma.js + graphology
+     (WebGL, fast, good hover/dim) or force-graph / 3d-force-graph (canvas,
+     closest to Obsidian feel out of the box). Territory halos drawn in a
+     separate canvas/SVG layer under the graph.
+   - Physics mostly off after the precomputed layout (small "jiggle" only),
+     so positions stay stable.
+
+8. DECISIONS 2026-09-19 -- literature support + candidates
+----------------------------------------------------------
+- Gene click shows an "About" block: NCBI name, evidence tier (NCBI-linked
+  implantation/decidua papers: strong >=10, moderate 3-9, limited 1-2, none),
+  a curated draft note with PubMed citations when available, otherwise NCBI
+  GeneRIF implantation statements, otherwise a "Novel candidate" message for
+  network hubs/drivers. General NCBI function is collapsible.
+- "Paper's curated genes only" is replaced by "Literature support":
+  All | Genes (>=3 papers or curated note, edges between them) |
+  Edges (CollecTRI-documented TF->target only). The paper-figure flag stays
+  as a tag in the gene panel.
+- "Novel candidates" = hubs or top-20 WOI/RIF drivers with <3 implantation
+  papers and no curated note -- presented as hypotheses, not findings.
+- Territory positions encode interaction strength (closer = more connected;
+  validated by Spearman rho, see progress.txt).
+- Curation workflow and rules: ../curation/README.txt.
