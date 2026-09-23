@@ -900,6 +900,39 @@
     try { saved = Number(localStorage.getItem("grn-w-" + side)); } catch (e) { /* ignore */ }
     setWidth(side, saved || LIMITS[side][2], false);
   }
+  // Panel visibility: the entry page passes ?ui=desktop|tablet|phone, which
+  // sets the opening widths (phone starts with both panels closed). The two
+  // top-bar buttons toggle them afterwards; the choice is remembered.
+  function setPanel(side, open, save = true) {
+    document.body.classList.toggle("hide-" + side, !open);
+    const btn = document.getElementById("toggle-" + side);
+    if (btn) btn.setAttribute("aria-expanded", String(open));
+    if (save) { try { localStorage.setItem("grn-open-" + side, open ? "1" : "0"); } catch (e) { /* ignore */ } }
+    renderer.resize(); renderer.refresh();
+  }
+  const UI_PRESET = { desktop: { w: [350, 350], open: true }, tablet: { w: [300, 320], open: true }, phone: { w: [300, 320], open: false } };
+  const askedUi = new URLSearchParams(location.search).get("ui");
+  if (askedUi && UI_PRESET[askedUi]) {
+    const preset = UI_PRESET[askedUi];
+    setWidth("left", preset.w[0], true);
+    setWidth("right", preset.w[1], true);
+    setPanel("left", preset.open);
+    setPanel("right", preset.open);
+    // Applied once: drop ?ui= so a reload or bookmark keeps what the visitor
+    // then chose here instead of snapping back to the preset.
+    history.replaceState(null, "", location.pathname + location.hash);
+  } else {
+    for (const side of ["left", "right"]) {
+      let open = true;
+      try { open = localStorage.getItem("grn-open-" + side) !== "0"; } catch (e) { /* ignore */ }
+      setPanel(side, open, false);
+    }
+  }
+  for (const side of ["left", "right"]) {
+    const btn = document.getElementById("toggle-" + side);
+    if (btn) btn.onclick = () => setPanel(side, document.body.classList.contains("hide-" + side));
+  }
+
   document.querySelectorAll(".resizer").forEach((bar) => {
     const side = bar.dataset.side;
     const panel = document.querySelector(`.panel.${side}`);

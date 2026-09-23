@@ -15,8 +15,8 @@ Hickey Lab · Department of Biomedical Engineering · Duke University.
 
 | Path | What it is |
 |---|---|
-| `index.html` | Landing page (logo, summary, "Enter the atlas") |
-| `atlas.html`, `app.js`, `style.css`, `landing.css` | The interactive atlas |
+| `index.html` | Entry page: ASTRAEA logo + Desktop / iPad / Mobile tabs |
+| `atlas.html`, `app.js`, `style.css`, `landing.css` | The atlas, and the entry-page styles |
 | `assets/` | ASTRAEA logo + star mark (SVG) |
 | `data/` | Site data: network, gene annotations, literature-supported links |
 | `tools/` | Build scripts, validator, browser test, local server |
@@ -32,6 +32,13 @@ tools/serve_local.sh          # or: python3 -m http.server 8000 --bind 127.0.0.1
 ```
 Opening the HTML files by double-clicking will not work: browsers block the
 data files over `file://`.
+
+### How the platform tabs work
+
+Each tab opens `atlas.html?ui=desktop|tablet|phone`, which sets the opening
+panel widths (phone starts with both panels closed) and is then stripped from
+the URL, so shared links and reloads keep whatever the visitor chose. The
+"Controls" and "Details" buttons in the atlas top bar collapse either panel.
 
 ## Check before pushing
 

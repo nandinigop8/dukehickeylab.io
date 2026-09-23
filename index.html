@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ASTRAEA · Endometrial Receptivity GRN Atlas</title>
-  <meta name="description" content="ASTRAEA: an interactive atlas of the gene regulatory network of the human endometrium across the menstrual cycle and in recurrent implantation failure. Hickey Lab, Duke University.">
+  <title>ASTRAEA</title>
+  <meta name="description" content="ASTRAEA: an interactive atlas of the gene regulatory network of the human endometrium. Hickey Lab, Duke University.">
   <link rel="icon" type="image/svg+xml" href="assets/astraea-mark.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="landing.css">
 </head>
 <body>
@@ -16,87 +16,60 @@
 
   <main class="hero">
     <svg class="logo" viewBox="0 0 1140 250" role="img" aria-label="ASTRAEA">
-  <defs>
-    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f6ddd3"/><stop offset="0.45" stop-color="#e0b2a4"/><stop offset="1" stop-color="#c17f70"/>
-    </linearGradient>
-  </defs>
-  <g transform="translate(126 125)">
-    <circle r="74" fill="none" stroke="url(#ink)" stroke-width="1.6" opacity="0.45"/>
-    <path d="M0 -106 Q 5.5 -11 94 0 Q 5.5 11 0 106 Q -5.5 11 -94 0 Q -5.5 -11 0 -106 Z" fill="url(#ink)"/>
-    <circle cx="0" cy="-99" r="3.6" fill="url(#ink)" opacity="0.85"/>
-    <circle cx="0" cy="99" r="3.6" fill="url(#ink)" opacity="0.85"/>
-  </g>
-  <path d="M258 130 Q 264 121 280 118 Q 264 115 258 106 Q 252 115 236 118 Q 252 121 258 130 Z" fill="url(#ink)" opacity="0.8"/>
-  <text x="318" y="162" font-family="Cinzel, 'Times New Roman', serif" font-size="112" letter-spacing="27" fill="url(#ink)">ASTRAEA</text>
-  <path d="M1084 130 Q 1090 121 1106 118 Q 1090 115 1084 106 Q 1078 115 1062 118 Q 1078 121 1084 130 Z" fill="url(#ink)" opacity="0.8"/>
-</svg>
-    <p class="tagline">The gene regulatory atlas of the receptive endometrium</p>
-    <p class="expand" title="Atlas of Single-cell Transcriptional Regulators And Elements of Attachment">
-      <b>A</b>tlas of <b>S</b>ingle-cell <b>T</b>ranscriptional <b>R</b>egulators <b>A</b>nd <b>E</b>lements of <b>A</b>ttachment
-    </p>
+      <defs>
+        <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#f6ddd3"/><stop offset="0.45" stop-color="#e0b2a4"/><stop offset="1" stop-color="#c17f70"/>
+        </linearGradient>
+      </defs>
+      <g transform="translate(126 125)">
+        <circle r="74" fill="none" stroke="url(#ink)" stroke-width="1.6" opacity="0.45"/>
+        <path d="M0 -106 Q 5.5 -11 94 0 Q 5.5 11 0 106 Q -5.5 11 -94 0 Q -5.5 -11 0 -106 Z" fill="url(#ink)"/>
+        <circle cx="0" cy="-99" r="3.6" fill="url(#ink)" opacity="0.85"/>
+        <circle cx="0" cy="99" r="3.6" fill="url(#ink)" opacity="0.85"/>
+      </g>
+      <path d="M258 130 Q 264 121 280 118 Q 264 115 258 106 Q 252 115 236 118 Q 252 121 258 130 Z" fill="url(#ink)" opacity="0.8"/>
+      <text x="318" y="162" font-family="Cinzel, 'Times New Roman', serif" font-size="112" letter-spacing="27" fill="url(#ink)">ASTRAEA</text>
+      <path d="M1084 130 Q 1090 121 1106 118 Q 1090 115 1084 106 Q 1078 115 1062 118 Q 1078 121 1084 130 Z" fill="url(#ink)" opacity="0.8"/>
+    </svg>
 
-    <a class="enter" href="atlas.html">Enter the atlas <span aria-hidden="true">→</span></a>
-    <p class="entry-note">Works on desktop, tablet and phone · best on a larger screen</p>
-
-    <ul class="facts">
-      <li><b>1,000</b><span>genes mapped in stromal cells</span></li>
-      <li><b>6</b><span>networks: LH+3 to LH+11, plus RIF</span></li>
-      <li><b>10</b><span>gene territories, each with a hub regulator</span></li>
-    </ul>
-
-    <section class="cards">
-      <article>
-        <h2>What it shows</h2>
-        <p>How transcription factors switch genes on and off in the uterine lining, and how that wiring changes across the cycle and in <b>recurrent implantation failure</b>.</p>
-      </article>
-      <article>
-        <h2>How it was built</h2>
-        <p>Single-cell RNA-seq from 28 women, networks inferred per cell type and timepoint with CellOracle, cross-checked with dynGENIE3.</p>
-      </article>
-      <article>
-        <h2>What it adds</h2>
-        <p>Every gene carries its implantation literature from NCBI and PubMed, so known regulators and <b>novel candidates</b> can be told apart at a glance.</p>
-      </article>
-    </section>
-
-    <p class="caveat">Links in the atlas are computational predictions, not proven cause and effect.
-      <span class="pill">demo_v1</span> is for review, not for citation.</p>
-
-    <footer>
-      <span>Hickey Lab · Department of Biomedical Engineering · Duke University</span>
-      <span class="dot" aria-hidden="true">·</span>
-      <a href="https://github.com/auggiepoysungnoen/Endometrial_Receptivity_GRN_Demo_V1">Source &amp; methods</a>
-    </footer>
+    <nav class="entries" aria-label="Open the atlas">
+      <a href="atlas.html?ui=desktop" data-ui="desktop">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4" width="19" height="13" rx="1.6"/><path d="M9 20.5h6M12 17.5v3"/></svg>
+        <span>Desktop</span>
+      </a>
+      <a href="atlas.html?ui=tablet" data-ui="tablet">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="1.8"/><path d="M11 19h2"/></svg>
+        <span>iPad</span>
+      </a>
+      <a href="atlas.html?ui=phone" data-ui="phone">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7.5" y="2.5" width="9" height="19" rx="2"/><path d="M11 19h2"/></svg>
+        <span>Mobile</span>
+      </a>
+    </nav>
   </main>
 
   <script>
-    // Slow starfield behind the logo; skipped for reduced-motion and drawn once
-    // per resize, so it costs nothing on phones.
+    // Faint starfield; static when the visitor prefers reduced motion.
     (function () {
       const c = document.getElementById("stars"), x = c.getContext("2d");
-      const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
       let stars = [], w = 0, h = 0, raf = null;
       function seed() {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        w = c.width = Math.round(innerWidth * dpr);
-        h = c.height = Math.round(innerHeight * dpr);
+        const dpr = Math.min(devicePixelRatio || 1, 2);
+        w = c.width = Math.round(innerWidth * dpr); h = c.height = Math.round(innerHeight * dpr);
         c.style.width = innerWidth + "px"; c.style.height = innerHeight + "px";
-        const n = Math.min(220, Math.round((innerWidth * innerHeight) / 9000));
+        const n = Math.min(200, Math.round((innerWidth * innerHeight) / 10000));
         stars = Array.from({ length: n }, () => ({
-          x: Math.random() * w, y: Math.random() * h,
-          r: (Math.random() * 1.1 + 0.3) * dpr,
-          a: Math.random() * 0.5 + 0.2, t: Math.random() * Math.PI * 2,
-          s: Math.random() * 0.6 + 0.2,
+          x: Math.random() * w, y: Math.random() * h, r: (Math.random() * 1.05 + 0.3) * dpr,
+          a: Math.random() * 0.45 + 0.15, t: Math.random() * 6.28, s: Math.random() * 0.6 + 0.2,
         }));
       }
       function draw(now) {
         x.clearRect(0, 0, w, h);
+        x.fillStyle = "#e9d6cf";
         for (const st of stars) {
-          const tw = still ? st.a : st.a * (0.65 + 0.35 * Math.sin(st.t + now / 1000 * st.s));
-          x.globalAlpha = tw;
-          x.fillStyle = "#e9d6cf";
-          x.beginPath(); x.arc(st.x, st.y, st.r, 0, Math.PI * 2); x.fill();
+          x.globalAlpha = still ? st.a : st.a * (0.6 + 0.4 * Math.sin(st.t + now / 1000 * st.s));
+          x.beginPath(); x.arc(st.x, st.y, st.r, 0, 6.2832); x.fill();
         }
         x.globalAlpha = 1;
         if (!still) raf = requestAnimationFrame(draw);
@@ -104,6 +77,13 @@
       function start() { if (raf) cancelAnimationFrame(raf); seed(); draw(performance.now()); }
       addEventListener("resize", start);
       start();
+    })();
+
+    // Mark the entry that fits the current screen; no text needed.
+    (function () {
+      const w = innerWidth;
+      const guess = w < 700 ? "phone" : w < 1180 ? "tablet" : "desktop";
+      document.querySelector(`.entries a[data-ui="${guess}"]`)?.classList.add("suggested");
     })();
   </script>
 </body>

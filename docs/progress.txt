@@ -256,3 +256,51 @@ demo_v1: header pill + page title
   validator 42/42 + 2 SKIP (cache-dependent checks now skip with a hint
   instead of crashing), territory rebuild byte-identical to the committed
   graph, site served from repo root 40/40.
+
+[2026-09-22] ASTRAEA: name, logo, entry page, device presets, shared toolchain
+-------------------------------------------------------------------------------
+NAME. The site is ASTRAEA (Greek star maiden) = Atlas of Single-cell
+Transcriptional Regulators And Elements of Attachment -- chosen after
+checking name collisions: STAR/STARsolo, STARmap, ASTER, ASTERIA (a
+commercial scRNA-seq kit), MAIA, KAIROS, DEMETER, PERSEUS, ANDROMEDA,
+CASSIOPEIA and ATHENA are all taken in genomics; ASTRAEA, ALCYONE, ASTERISM,
+STARLIT and SIDEREAL were free.
+
+LOGO. Rebuilt as vector from the lab's concept (assets/astraea-logo.svg,
+astraea-mark.svg): four-point star in a thin broken circle + Cinzel wordmark,
+rose-gold gradient #f6ddd3 -> #c17f70. Brand ink #d0988e measures 7.7:1 on
+the #111114 canvas, so it stays rose-gold rather than white. The supplied
+raster was dropped: its white background baked in, and un-premultiplying it
+left the artwork dim on dark.
+
+ENTRY PAGE (index.html, minimal by request: logo + three tabs, 4 words).
+The atlas moved to atlas.html. Each tab opens the atlas with a preset:
+  desktop  350/350 px panels, both open
+  tablet   300/320 px panels, both open
+  phone    same widths, both panels closed
+?ui= is applied once and then stripped from the URL (history.replaceState),
+so a reload or bookmark keeps whatever the visitor chose afterwards; a plain
+atlas.html link still works for sharing.
+
+PANEL TOGGLES. "Controls" and "Details" buttons in the atlas top bar collapse
+either side panel; the choice is remembered per browser. A hidden panel and
+its resizer leave the grid, so the column list is redefined per state --
+setting the column width to 0 instead made the map collapse to 0 px (caught
+by the new browser check).
+
+SHARED TOOLCHAIN. script/_paths.py resolves site/exports/cache/curation/docs
+for either layout: this workspace, or a website repo where the site sits at
+the repo root (exports in analysis_data/). Checks that need files kept out of
+git now report SKIP with the fix, instead of crashing:
+  - no analysis_data/  -> source-comparison checks skipped (32/32 + 3 SKIP)
+  - no .cache/         -> CollecTRI re-derivation + citation tracing skipped
+
+PUSHED. Nandini's repo (github.com/nandinigop8/dukehickeylab.io) now holds
+the whole thing: site at the root, tools/, curation/, docs/ (incl. HANDOFF
+and methods), requirements.txt, environment.yml, .gitignore. Her earlier
+version (Receptivity Atlas branding, panel toggles, working "Across the
+cycle" scrubber) is preserved on branch nandini-version-backup.
+
+VALIDATION. 49/49 data + site checks, 45/45 browser checks (new: entry page
+offers the three platforms, entry page stays minimal, Controls button hides
+and restores the left panel, mobile entry opens with both panels closed).

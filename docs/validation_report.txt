@@ -1,5 +1,5 @@
-Validation report -- 2026-09-22 22:24 -- compartments: stromal
-32/32 checks passed (0s); 3 skipped (needs the .cache folder -- run build_gene_annotations.py once)
+Validation report -- 2026-09-22 22:34 -- compartments: stromal
+32/32 checks passed (0s); 3 skipped (see the SKIP lines above)
 
 [PASS] groups are the 6 CellOracle groups in order
 [PASS] gene ids unique -- 1000 genes
@@ -23,7 +23,7 @@ Validation report -- 2026-09-22 22:24 -- compartments: stromal
 [PASS] curation check rejects an untraceable citation (negative test)
 [PASS] atlas.html references existing style.css
 [PASS] atlas.html references existing app.js
-[PASS] landing page links to the atlas
+[PASS] landing page offers the three platform entries
 [PASS] landing page asset present: landing.css
 [PASS] logo mark file present and used as the icon
 [PASS] landing page carries the inline vector wordmark
@@ -32,7 +32,7 @@ Validation report -- 2026-09-22 22:24 -- compartments: stromal
 [PASS] atlas page's compartment has graph + annotation data -- stromal
 [PASS] CDN library reachable: graphology@0.26.0/dist/graphology.umd.min.js
 [PASS] CDN library reachable: sigma@3.0.3/dist/sigma.min.js
-[PASS] site folder size reasonable for sharing (< 25 MB) -- 2.4 MB
+[PASS] site folder size reasonable for sharing (< 25 MB) -- 2.9 MB
 [SKIP] stromal: checks against the original exports in analysis_data/ -- needs analysis_data/stromal/ -- copy it from the analysis workspace
 [SKIP] CollecTRI support re-derived from raw download (400 random edges) -- needs the .cache folder -- run build_gene_annotations.py once
 [SKIP] every curated-note PMID is linked to that gene in NCBI (GeneRIF or gene2pubmed) -- needs the .cache folder -- run build_gene_annotations.py once

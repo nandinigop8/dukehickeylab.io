@@ -25,6 +25,10 @@
       <button class="view-tab" data-view="woi" disabled title="Coming next: how the network changes across the cycle">Across the cycle <em>soon</em></button>
     </nav>
     <button class="help-btn" id="help-open" aria-haspopup="dialog"><span class="badge">?</span>Reading guide</button>
+    <div class="panel-toggles">
+      <button class="pt" id="toggle-left" aria-expanded="true" aria-controls="panel-left" title="Show or hide the controls panel">Controls</button>
+      <button class="pt" id="toggle-right" aria-expanded="true" aria-controls="panel-right" title="Show or hide the gene details panel">Details</button>
+    </div>
     <div class="search">
       <input id="search" type="search" list="gene-list" placeholder="Find a gene, e.g. HAND2" autocomplete="off" spellcheck="false" aria-label="Find a gene">
       <datalist id="gene-list"></datalist>
@@ -32,7 +36,7 @@
   </header>
 
   <main class="layout">
-    <aside class="panel left" aria-label="Controls">
+    <aside class="panel left" id="panel-left" aria-label="Controls">
       <section>
         <h2><span class="badge">1</span>Show links from</h2>
         <div class="seg" id="mode" role="radiogroup" aria-label="Show links from">
@@ -112,7 +116,7 @@
     </div>
 
     <div class="resizer" data-side="right" role="separator" aria-orientation="vertical" aria-label="Resize right panel" tabindex="0" title="Drag to resize · double-click to reset"></div>
-    <aside class="panel right" aria-label="Details">
+    <aside class="panel right" id="panel-right" aria-label="Details">
       <div id="detail"></div>
     </aside>
   </main>

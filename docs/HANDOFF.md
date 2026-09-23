@@ -1,4 +1,4 @@
-# Handoff: ASTRAEA (demo_v1 → next)
+# Handoff: Endometrial GRN Explorer (demo_v1 → next)
 
 For **Nandini**. This gets you from "received the project" to "running and
 changing it" in about 15 minutes. For the science and data dictionary see
@@ -20,8 +20,8 @@ git clone https://github.com/nandinigop8/dukehickeylab.io.git
 cd dukehickeylab.io
 ```
 
-**Data** (not on GitHub: unpublished and large). Copy the lab's
-`Nandini_Website/data/` folder (~52 MB) into the clone as `./data/`. Optional:
+**Data** (not on GitHub: unpublished and large). Copy the lab's exported
+results (~52 MB) into the clone as `./analysis_data/`. Optional:
 `./figures/` (the static paper figures, for reference only).
 
 **Python** (only needed to rebuild data; the site itself is plain HTML/JS).
@@ -39,7 +39,7 @@ pip install -r requirements.txt           # or: conda env create -f environment.
 
 ```bash
 python3 -m http.server 8000 --bind 127.0.0.1     # from the repo root (any OS)
-# open http://127.0.0.1:8000/./
+# open http://127.0.0.1:8000/   (entry page)
 ```
 (`tools/serve_local.sh` does the same on Mac/Linux.)
 Opening `index.html` by double-click will **not** work: browsers block the
@@ -65,8 +65,11 @@ All paths above are under `local_host_development/`.
 
 | File | What it is |
 |---|---|
-| `app.js` | The whole app: loading, map rendering, territories/roads overlay, filters, panels, reading guide, resizable sidebars |
-| `index.html` (landing), `atlas.html`, `style.css`, `landing.css` | Layout, cards (numbered 1–7 left, lettered A–F right), reading guide |
+| `site/app.js` | The whole app: loading, map rendering, territories/roads overlay, filters, panels, reading guide, resizable sidebars |
+| `site/index.html` | Entry page: ASTRAEA logo + Desktop / iPad / Mobile tabs |
+| `site/atlas.html`, `style.css`, `landing.css` | The atlas itself, and the entry-page styles |
+| `site/assets/*.svg` | ASTRAEA logo and star mark |
+| `script/_paths.py` | Finds site/data/cache in either layout (workspace or website repo) |
 | `script/build_territory_graph.py` | Build map data for one compartment |
 | `script/build_gene_annotations.py` | Build literature data for all compartments (downloads ~100 MB on first run into `.cache/`, ~10 min) |
 | `script/validate_site.py` | 44 data checks against the original exports |
@@ -89,7 +92,7 @@ python3 tools/validate_site.py stromal
 #   expect 44/44; on a fresh clone 42/42 + 2 SKIP until build_gene_annotations.py
 #   has been run once (those 2 checks re-read the git-ignored download cache)
 # browser test (one-time: npm i playwright && npx playwright install chromium)
-node tools/tests/browser_smoke.js http://127.0.0.1:8000/./
+node tools/tests/browser_smoke.js http://127.0.0.1:8000/
 ```
 
 **Edit or review a gene note**: edit `curation/implantation_gene_notes.csv`

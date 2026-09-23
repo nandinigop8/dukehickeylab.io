@@ -139,3 +139,16 @@ Dark tokens (starting values, to validate):
   "Draft · pending lab review" (amber) or "Reviewed · <name>" (green).
 - Edge literature badge: "lit +" green / "lit −" red outline / "lit" neutral.
 - Selection ring drawn on its own overlay layer (2px white + faint outer).
+
+9. BRAND 2026-09-22 -- ASTRAEA
+------------------------------
+- Wordmark: Cinzel (Google Fonts), letter-spaced, rose-gold gradient
+  #f6ddd3 -> #e0b2a4 -> #c17f70; star mark = four-point star in a thin
+  circle (stroke 1.6, opacity .45) with two small end dots.
+- Brand ink --brand #d0988e (7.7:1 on #111114). Purple --accent #c792ea stays
+  the UI accent (badges, focus rings); rose-gold is brand-only, so the two
+  never compete inside the map.
+- Entry page: near-black #0d0d10, faint rose glow behind the logo, animated
+  starfield (static under prefers-reduced-motion), three outlined tabs that
+  turn rose-gold on hover; the tab matching the current screen is marked.
+- Assets are SVG (crisp at any size, themeable); no raster logo files.

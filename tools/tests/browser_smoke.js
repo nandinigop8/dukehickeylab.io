@@ -46,12 +46,14 @@ const shot = async (p, name) => { if (OUT) await p.screenshot({ path: `${OUT}/${
     const box = el && el.getBoundingClientRect();
     return { title: document.title, logoOk: !!box && box.width > 200 && box.height > 30,
              wordmark: !!el && /ASTRAEA/.test(el.textContent),
-             enter: document.querySelector(".enter")?.getAttribute("href") };
+             entries: [...document.querySelectorAll(".entries a")].map((a) => a.getAttribute("href")),
+             words: document.body.innerText.trim().split(/\s+/).filter(Boolean).length };
   });
   check("Landing page shows the ASTRAEA logo", landing.logoOk && landing.wordmark && /ASTRAEA/.test(landing.title), JSON.stringify(landing));
-  check("'Enter the atlas' links to the atlas page", landing.enter === "atlas.html");
+  check("Entry page offers desktop / iPad / mobile", landing.entries.join(",") === "atlas.html?ui=desktop,atlas.html?ui=tablet,atlas.html?ui=phone", landing.entries.join(" "));
+  check("Entry page stays minimal (only the three labels)", landing.words <= 6, `${landing.words} words`);
   await shot(p, "00_landing");
-  await p.click(".enter");
+  await p.click('.entries a[data-ui="desktop"]');
   await p.waitForLoadState("networkidle");
   await p.waitForSelector("#stats div", { timeout: 20000 });
   await p.waitForTimeout(800);
@@ -209,6 +211,30 @@ const shot = async (p, name) => { if (OUT) await p.screenshot({ path: `${OUT}/${
   });
   check("Escape leaves no stale selection ring (regression)", ringPixels.hovers === 0 && ringPixels.selection === 0,
     JSON.stringify(ringPixels) + " painted pixels");
+
+  // Panel toggles (used by the iPad / mobile entries)
+  const panelState = async () => p.evaluate(() => ({
+    left: !document.body.classList.contains("hide-left"),
+    right: !document.body.classList.contains("hide-right"),
+    stage: Math.round(document.getElementById("stage").getBoundingClientRect().width),
+  }));
+  const before = await panelState();
+  await p.click("#toggle-left"); await p.waitForTimeout(350);
+  const hidden = await panelState();
+  await p.click("#toggle-left"); await p.waitForTimeout(350);
+  const back = await panelState();
+  check("Controls button hides and restores the left panel",
+    before.left && !hidden.left && back.left && hidden.stage > before.stage && back.stage === before.stage,
+    JSON.stringify({ before, hidden, back }));
+  await p.goto(BASE + "atlas.html?ui=phone", { waitUntil: "networkidle" });
+  // With the phone entry both panels start closed, so wait for the map itself.
+  await p.waitForFunction(() => window.grnDebug && grnDebug.graph.order > 0);
+  await p.waitForTimeout(500);
+  const phone = await panelState();
+  check("Mobile entry opens the map with both panels closed", !phone.left && !phone.right, JSON.stringify(phone));
+  await p.goto(BASE + "atlas.html?ui=desktop", { waitUntil: "networkidle" });
+  await p.waitForSelector("#stats div"); await p.waitForTimeout(500);
+  await p.evaluate(() => { document.getElementById("toggle-left").click(); document.getElementById("toggle-left").click(); });
 
   // Territory click
   await p.click('.territories li[data-t="0"]'); await p.waitForTimeout(900);

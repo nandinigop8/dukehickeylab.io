@@ -314,7 +314,8 @@ def validate_site_files(comps):
     html = (SITE / "atlas.html").read_text()
     for f in ["style.css", "app.js"]:
         check(f"atlas.html references existing {f}", f in html and (SITE / f).exists())
-    check("landing page links to the atlas", 'href="atlas.html"' in landing)
+    check("landing page offers the three platform entries",
+          all(f'atlas.html?ui={u}' in landing for u in ("desktop", "tablet", "phone")))
     check("landing page asset present: landing.css", "landing.css" in landing and (SITE / "landing.css").exists())
     check("logo mark file present and used as the icon",
           (SITE / "assets" / "astraea-mark.svg").exists() and "assets/astraea-mark.svg" in landing and "assets/astraea-mark.svg" in html)

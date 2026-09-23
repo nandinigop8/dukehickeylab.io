@@ -85,6 +85,24 @@ button, input { font: inherit; color: inherit; }
   overflow-y: auto;
   padding: 14px 16px 24px;
 }
+/* collapsible side panels (set by the entry page's ?ui= choice, or the
+   Controls / Details buttons in the top bar) */
+/* the hidden panel and its resizer leave the grid, so the column list has to
+   match the items that are left */
+body.hide-left .layout { grid-template-columns: minmax(0, 1fr) 6px var(--rw, 350px); }
+body.hide-right .layout { grid-template-columns: var(--lw, 350px) 6px minmax(0, 1fr); }
+body.hide-left.hide-right .layout { grid-template-columns: minmax(0, 1fr); }
+body.hide-left .panel.left, body.hide-left .resizer[data-side="left"],
+body.hide-right .panel.right, body.hide-right .resizer[data-side="right"] { display: none; }
+.panel-toggles { display: flex; gap: 6px; }
+.pt {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 10px; font-size: 12.5px; color: var(--text-2); cursor: pointer;
+}
+.pt:hover { border-color: #4a4a55; color: var(--text); }
+.pt[aria-expanded="false"] { color: var(--muted); border-style: dashed; }
+.pt:focus-visible { outline: 2px solid var(--accent); }
+
 /* ---------- cards: one style for every block in both side panels ---------- */
 .panel { padding: 12px 12px 20px; }
 .panel section, .detail-section, .gsec {

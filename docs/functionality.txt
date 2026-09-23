@@ -152,3 +152,16 @@ D. Rendering
 - Territory positions encode interaction strength (closer = more connected;
   validated by Spearman rho, see progress.txt).
 - Curation workflow and rules: ../curation/README.txt.
+
+9. DECISIONS 2026-09-22 -- entry page, device presets, panel toggles
+---------------------------------------------------------------------
+- index.html is a minimal entry page: logo + three tabs (Desktop / iPad /
+  Mobile). No prose, by request. The atlas lives at atlas.html.
+- The tabs are not separate interfaces (one responsive site, one codebase).
+  They set how the atlas opens -- see ?ui= presets in progress.txt -- and the
+  choice is remembered; ?ui= is stripped after it is applied.
+- Top bar has "Controls" and "Details" buttons that collapse either panel;
+  used by the phone preset, available everywhere.
+- The atlas still works when opened directly (atlas.html with no ?ui=), which
+  keeps shared links and deep links working.
+- Scripts run from this workspace or from a website repo (script/_paths.py).
