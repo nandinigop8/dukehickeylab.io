@@ -23,10 +23,46 @@ body {
 }
 #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
-.hero { position: relative; z-index: 1; text-align: center; width: min(760px, 100%); }
+.hero { position: relative; z-index: 1; text-align: center; width: min(900px, 100%); }
 .logo {
-  width: min(560px, 90%); height: auto; display: block; margin: 0 auto 44px;
+  margin: 0 0 2px;
+  color: var(--brand);
+  font: 500 clamp(30px, 9.5vw, 100px)/1.08 "Cinzel", Georgia, serif;
+  letter-spacing: .1em;
+  white-space: nowrap;
   filter: drop-shadow(0 0 30px rgba(208, 152, 142, 0.18));
+}
+.tagline {
+  position: relative;
+  width: max-content;
+  max-width: 100%;
+  margin: -2px auto 46px;
+  color: #d8dae1;
+  background: linear-gradient(100deg, #9da1ad 0%, #f0f1f4 48%, #b7bac5 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font: normal clamp(36px, 5.6vw, 58px)/1.05 "Mrs Saint Delafield", cursive;
+  letter-spacing: .015em;
+  transform: rotate(-1.5deg);
+}
+.tagline::after {
+  content: "";
+  position: absolute;
+  left: 50%; bottom: -5px;
+  width: 58%; height: 8px;
+  border-top: 1px solid rgba(216, 218, 225, .62);
+  border-radius: 50%;
+  transform: translateX(-42%) rotate(-2deg);
+}
+
+.entry-label {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .2em;
+  text-transform: uppercase;
 }
 
 .entries { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
@@ -52,7 +88,8 @@ body {
 .entries a.suggested { color: var(--text); border-color: rgba(208, 152, 142, 0.5); }
 
 @media (max-width: 560px) {
-  .logo { margin-bottom: 34px; }
+  .logo { margin-bottom: 4px; }
+  .tagline { margin-bottom: 36px; }
   .entries { gap: 10px; }
   .entries a { width: 100px; padding: 16px 8px 13px; font-size: 11.5px; }
   .entries svg { width: 26px; height: 26px; }

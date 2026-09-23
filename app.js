@@ -54,7 +54,7 @@
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const fmt = (v, d = 3) => (v == null ? "—" : v.toFixed(d));
+  const fmt = (v, d = 3) => (v == null ? "n/a" : v.toFixed(d));
 
   // ---------------------------------------------------------------- load
   let data;
@@ -76,7 +76,10 @@
     console.warn("Literature annotations not loaded:", err);
   }
   $("loading").remove();
-  $("compartment-label").textContent = COMPARTMENT[0].toUpperCase() + COMPARTMENT.slice(1);
+  // The header shows the atlas name only; the compartment is named in the
+  // Territories card and the reading guide.
+  const compLabel = $("compartment-label");
+  if (compLabel) compLabel.textContent = COMPARTMENT[0].toUpperCase() + COMPARTMENT.slice(1);
 
   const T = data.territories;
   const Graph = graphology.Graph || graphology;
@@ -443,7 +446,7 @@
   //   road = bundle of links between territories, importance = eigenvector
   //   centrality, "in both" / "new in RIF" / "missing in RIF" = edge status.
   const STATUS_TEXT = { retained: "In both", gained: "New in RIF", lost: "Missing in RIF" };
-  const signed = (v, d = 2) => (v == null ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d));
+  const signed = (v, d = 2) => (v == null ? "n/a" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d));
 
   function geneListItems(list, right, title) {
     return list.map((g) => `
@@ -466,7 +469,7 @@
     return `
       <div class="detail-section">
       <h2><span class="badge">A</span>Territories</h2>
-      <p class="hint">Gene groups, named after their hub · click to zoom</p>
+      <p class="hint">Click to zoom</p>
       <div class="t-head"><span></span><span>Hub gene · size</span><span>Links <span class="up">new</span> / <span class="down">missing</span> in RIF</span></div>
       <ul class="territories">
         ${T.map((t, i) => `
@@ -479,13 +482,13 @@
       </div>
       <div class="detail-section">
         <h2><span class="badge">B</span>Known implantation regulators</h2>
-        <p class="hint">Regulators with 3+ implantation papers</p>
+        <p class="hint">3+ implantation papers</p>
         <div class="list-head"><span>Gene</span><span>Papers</span></div>
         <ul class="edge-list">${geneListItems(known, (a) => ann[a.id]?.nImpl ?? 0)}</ul>
       </div>
       <div class="detail-section">
         <h2><span class="badge">C</span>Novel candidates</h2>
-        <p class="hint">Central here, little research · leads, not findings</p>
+        <p class="hint">Central here, little literature</p>
         <div class="list-head"><span>Gene</span><span>Why it stands out</span></div>
         <ul class="edge-list">${geneListItems(cands, why)}</ul>
       </div>`;
@@ -512,73 +515,111 @@
     none: "No papers on implantation or decidualization found for this gene.",
   };
 
-  // Gene explanation, in a fixed order:
-  //   Name (alternative names) -> Function in implantation/receptivity ->
-  //   General function -> Literature findings/experiments.
-  // Each is a collapsible card; open/closed state carries over between genes.
-  const secOpen = { A: true, B: true, C: false, D: false };
-  const section = (num, title, body, extra = "") =>
-    `<details class="gsec" data-sec="${num}" ${secOpen[num] ? "open" : ""}>
-      <summary><h4><span class="badge">${num}</span>${title}${extra}<span class="chev">▶</span></h4></summary>
-      <div class="gsec-body">${body}</div></details>`;
+  // Gene panel: fixed section order, all open, one card style.
+  //   A Name · B Roles in implantation · C General roles ·
+  //   D Cell-type specificity · E Literature evidence · F Confirmed links ·
+  //   G In this network · H Gene links
+  const section = (letter, title, body, extra = "") =>
+    `<section class="gsec" data-sec="${letter}"><h4><span class="badge">${letter}</span> <span class="sec-title">${title}</span>${extra}</h4>
+      <div class="gsec-body">${body}</div></section>`;
+
+  const COMP_LABEL = { stromal: "Stromal", epithelial: "Epithelial", tcell: "T cell", unk: "uNK", activatednk: "Activated NK" };
+
+  function cellTypeHTML(A) {
+    const ct = A.cellTypes || {};
+    const rows = Object.keys(COMP_LABEL).map((c) => {
+      const v = ct[c];
+      const here = c === COMPARTMENT;
+      return `<div class="ct-row${here ? " here" : ""}">
+        <span class="ct-name">${COMP_LABEL[c]}${here ? " <span class='muted'>· shown</span>" : ""}</span>
+        ${v ? `<span class="ct-bar"><i style="width:${Math.max(2, v.pct)}%"></i></span><span class="ct-val">${v.pct}%</span>`
+            : `<span class="ct-bar"></span><span class="ct-val muted">not in network</span>`}
+      </div>`;
+    }).join("");
+    return rows + `<p class="hint">Centrality percentile within each cell type's fertile LH+7 network. Network position, not expression level.</p>`;
+  }
+
+  function evidenceHTML(id, A) {
+    const seen = new Set();
+    const rows = [];
+    const push = (r, gene) => {
+      if (!r || !r.pmid || seen.has(r.pmid)) return;
+      seen.add(r.pmid);
+      rows.push({ pmid: r.pmid, author: r.author || "", year: r.year || "", journal: r.journal || "",
+                  general: r.title || "", gene: gene || "" });
+    };
+    (A.rifsImpl || []).forEach((r) => push(r, r.text));
+    (A.note ? A.note.cites : []).forEach((c) => push(c, ""));
+    (A.papers || []).forEach((p) => push(p, ""));
+    if (!rows.length) return `<p class="muted">No implantation papers found</p>`;
+    // A GeneRIF line is often the paper's title verbatim: show it once.
+    const key = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+    const cell = (r) => {
+      const dup = r.gene && r.general && key(r.gene) === key(r.general);
+      const parts = [];
+      if (r.gene) parts.push(`<span class="ev-gene">${esc(r.gene)}</span>`);
+      if (r.general && !dup) parts.push(`<span class="ev-general">${r.gene ? "Paper: " : ""}${esc(r.general)}</span>`);
+      if (!parts.length) parts.push(`<span class="muted">n/a</span>`);
+      return parts.join("");
+    };
+    const row = (r) => `<tr>
+        <td class="ev-ref">${pubmed(r.pmid)}<span class="ev-cite">${esc(r.author ? r.author + " et al." : "n/a")}${r.year ? ` (${esc(r.year)})` : ""}</span>${r.journal ? `<span class="ev-jrn">${esc(r.journal)}</span>` : ""}</td>
+        <td>${cell(r)}</td></tr>`;
+    const search = `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(id)}+AND+(implantation+OR+decidualization+OR+endometrium)`;
+    return `<table class="evid">
+      <thead><tr><th>Reference</th><th>Finding</th></tr></thead>
+      <tbody>${rows.map(row).join("")}</tbody>
+    </table>
+    <p class="ev-foot">${rows.length} paper${rows.length === 1 ? "" : "s"} shown · <a href="${search}" target="_blank" rel="noopener">Search PubMed</a></p>`;
+  }
+
+  function confirmedHTML(id) {
+    const known = [];
+    graph.forEachEdge(id, (e, a, s, tg) => { if (a.lit) known.push({ s, t: tg, lit: a.lit }); });
+    if (!known.length) return `<p class="muted">None in this map</p>`;
+    return `<table class="evid">
+      <thead><tr><th>Link</th><th>Reported</th></tr></thead>
+      <tbody>${known.map((k) => `<tr>
+        <td class="ev-ref"><b>${esc(k.s)}</b> → ${esc(k.t)}</td>
+        <td>${k.lit.sign === "+" ? "switches on" : k.lit.sign === "-" ? "switches off" : "regulates"}
+          <span class="pmids">${k.lit.refs.map(pubmed).join("")}</span></td></tr>`).join("")}</tbody>
+    </table><p class="hint">Regulator → target links in this map that published experiments also report (CollecTRI).</p>`;
+  }
 
   function aboutHTML(id, n) {
     const A = ann[id];
-    if (!A) return `<div class="muted-box">No literature information for this gene.</div>`;
+    if (!A) return `<div class="muted-box">No literature information</div>`;
     const driver = n.hub || n.woiRank != null || n.rifRank != null;
 
-    // 1. Name (alternative names): short symbols first, then up to 2 names.
     const alt = [...(A.aliases || []).slice(0, 6),
       ...(A.otherNames || []).filter((x) => x.toLowerCase() !== (A.name || "").toLowerCase() && x.length <= 60).slice(0, 2)];
     const s1 = section("A", "Name", `
       <p class="gname">${A.name ? esc(A.name) : esc(id)}</p>
       ${alt.length ? `<p class="galt"><span class="muted">Also known as</span> ${alt.map(esc).join(", ")}</p>` : ""}`);
 
-    // 2. Function in implantation / receptivity
     let body2;
     if (A.note) {
-      const reviewed = A.note.status === "reviewed";
-      body2 = `<p class="gtext">${esc(A.note.text)}</p>
-        <p class="note-src"><span class="status ${reviewed ? "reviewed" : ""}" title="${reviewed ? "Checked by the lab" : "Written from the cited papers; not yet checked by the lab"}">${reviewed ? `Reviewed${A.note.reviewer ? " · " + esc(A.note.reviewer) : ""}` : "Draft"}</span> · ${A.note.cites.map((c) => pubmed(c.pmid)).join(" · ")}</p>`;
-    } else if (A.rifsImpl.length) {
-      body2 = `<p class="muted">No summary yet. See findings in section D.</p>`;
+      body2 = `<p class="gtext">${esc(A.note.text)}</p>`;
+    } else if ((A.rifsImpl || []).length) {
+      body2 = `<p class="muted">No summary yet · see section E</p>`;
     } else {
-      body2 = `<p class="muted">No known role in implantation.${driver ? ` <span class="tag cand" title="Central in this map but little implantation research">Novel candidate</span>` : ""}</p>`;
+      body2 = `<p class="muted">No known role in implantation${driver ? ` <span class="tag cand" title="Central in this map but little implantation research">Novel candidate</span>` : ""}</p>`;
     }
-    const s2 = section("B", "Function in implantation", body2);
+    const s2 = section("B", "Roles in implantation", body2);
 
-    // 3. General function
     const summ = A.summary || "";
     const cut = summ.length > 260 ? summ.lastIndexOf(" ", 240) : -1;
-    const s3 = section("C", "General function", summ
+    const s3 = section("C", "General roles", summ
       ? (cut > 0
         ? `<div class="gtext" title="NCBI Gene summary"><span class="g-short">${esc(summ.slice(0, cut))}… </span><span class="g-full" hidden>${esc(summ)} </span><button class="linklike g-more">more</button></div>`
         : `<div class="gtext" title="NCBI Gene summary">${esc(summ)}</div>`)
-      : `<p class="muted">No NCBI description${A.type && A.type !== "protein-coding" ? ` (${esc(A.type)})` : ""}.</p>`);
+      : `<p class="muted">No NCBI description${A.type && A.type !== "protein-coding" ? ` (${esc(A.type)})` : ""}</p>`);
 
-    // 4. Literature findings / experiments
-    const known = [];
-    graph.forEachEdge(id, (e, a, s, tg) => { if (a.lit) known.push({ s, t: tg, lit: a.lit }); });
-    const p4 = [];
-    if (A.rifsImpl.length) {
-      p4.push(`<p class="sub-h" title="One-line summaries curated by NCBI (GeneRIF), newest first">Implantation findings · ${A.nRifsImpl}</p>
-        <ul class="rifs">${A.rifsImpl.slice(0, 3).map((r) => `<li>${esc(r.text)} ${pubmed(r.pmid)}</li>`).join("")}</ul>`);
-    }
-    if (known.length) {
-      p4.push(`<p class="sub-h" title="Regulator → target links in this map also reported in experiments (CollecTRI database)">Links confirmed by experiments · ${known.length}</p>
-        <ul class="rifs">${known.slice(0, 5).map((k) => `<li>${esc(k.s)} → ${esc(k.t)} ${litBadge(k.lit)} ${k.lit.refs[0] ? pubmed(k.lit.refs[0]) : ""}</li>`).join("")}</ul>`);
-    }
-    if (A.papers.length) {
-      p4.push(`<p class="sub-h">Latest papers</p><p class="pmids">${A.papers.map((p) => pubmed(p.pmid)).join("")}</p>`);
-    }
-    if (A.rifsEndo.length) {
-      p4.push(`<details class="summary"><summary>Other uterine-lining findings</summary>
-        <ul class="rifs">${A.rifsEndo.map((r) => `<li>${esc(r.text)} ${pubmed(r.pmid)}</li>`).join("")}</ul></details>`);
-    }
-    if (!p4.length) p4.push(`<p class="muted">No implantation papers found.</p>`);
-    const badge = ` <span class="ev-badge ${A.tier}" title="${esc(TIER_EXPLAIN[A.tier])} (automatic count from NCBI Gene)">${TIER_TEXT[A.tier]} · ${A.nImpl}</span>`;
-    const s4 = section("D", "Literature", p4.join(""), badge);
-    return `<div class="about">${s1}${s2}${s3}${s4}</div>`;
+    const s4 = section("D", "Cell-type specificity", cellTypeHTML(A));
+    const badge = ` <span class="ev-badge ${A.tier}" title="${esc(TIER_EXPLAIN[A.tier])} Automatic count from NCBI Gene.">${TIER_TEXT[A.tier]} · ${A.nImpl}</span>`;
+    const s5 = section("E", "Literature evidence", evidenceHTML(id, A), badge);
+    const s6 = section("F", "Confirmed links", confirmedHTML(id));
+    return `<div class="about">${s1}${s2}${s3}${s4}${s5}${s6}</div>`;
   }
 
   function litBadge(l) {
@@ -599,37 +640,41 @@
     ins.sort((x, y) => mag(y) - mag(x));
     const eF = n.eig[F], eR = n.eig[R];
     const dF = n.deg[F], dR = n.deg[R];
-    const diff = (a, b, d) => (a == null && b == null ? "—" : signed((b ?? 0) - (a ?? 0), d));
+    const diff = (a, b, d) => (a == null && b == null ? "n/a" : signed((b ?? 0) - (a ?? 0), d));
     const A = ann[id] || {};
     const tags = [
       `<span class="tag strong" style="border-color:${t.color};color:${t.color}" title="The gene group this gene belongs to">${esc(t.hub)} territory</span>`,
       n.hub ? `<span class="tag strong" title="The most connected regulator of its territory">Territory hub</span>` : "",
-      n.dual === true ? `<span class="tag strong" title="Identified as a key regulator by both network methods in this study (CellOracle and dynGENIE3)">Confirmed by 2 methods</span>` : "",
+      n.dual === true ? `<span class="tag strong" title="CellOracle identified condition- and timepoint-specific regulation; dynGENIE3 independently supported the regulator along fertile pseudotime">Confirmed by 2 methods</span>` : "",
       n.dual === null ? `<span class="tag" title="The second method could not be run for this cell type">2nd method not available</span>` : "",
       n.rifRank ? `<span class="tag" title="Among the 20 genes whose importance differs most between fertile and RIF">Top changer in RIF #${n.rifRank}</span>` : "",
       n.woiRank ? `<span class="tag" title="Among the 20 genes whose importance shifts most across LH+3 to LH+11 in fertile women">Top changer across cycle #${n.woiRank}</span>` : "",
       n.curated ? `<span class="tag" title="Shown in the published static figure">In paper figure</span>` : "",
       n.candidate ? `<span class="tag cand" title="Central in this map but little implantation research">Novel candidate</span>` : "",
     ].join("");
-    const legend = `<div class="mini-legend"><span><i style="background:var(--retained)"></i>in both</span><span><i style="background:var(--gained)"></i>new in RIF</span><span><i style="background:var(--lost)"></i>missing in RIF</span><span title="Link strength = model estimate: + switches the target on, − switches it off, — no link">+ on · − off</span></div>`;
+    const legend = `<div class="mini-legend"><span><i style="background:var(--retained)"></i>in both</span><span><i style="background:var(--gained)"></i>new in RIF</span><span><i style="background:var(--lost)"></i>missing in RIF</span><span title="Link strength = model estimate: + switches the target on, − switches it off; n/a means no link">+ on · − off</span></div>`;
     return `
       <button class="back" data-back>← Back to overview</button>
-      <div class="gene-head"><h3>${esc(id)}</h3><span class="role-pill ${n.tf ? "tf" : ""}" title="${n.tf ? "A transcription factor: can switch other genes on or off" : "Only regulated by other genes in this analysis"}">${n.tf ? "Regulator (TF)" : "Target gene"}</span></div>
+      <div class="gene-head">
+        <span class="role-tag ${n.tf ? "tf" : ""}" title="${n.tf ? "Transcription factor: can switch other genes on or off" : "Only regulated by other genes in this analysis"}">${n.tf ? "TF" : "Target"}</span>
+        <h3>${esc(id)}</h3>
+      </div>
       ${aboutHTML(id, n)}
       <div class="detail-section">
-      <h2><span class="badge">E</span>In this network</h2>
+      <h2><span class="badge">G</span>In this network</h2>
       <div class="tags">${tags}</div>
+      ${n.dual === true ? `<p class="method-explain">CellOracle and dynGENIE3 independently identified this regulator. Agreement raises confidence; it does not prove causality.</p>` : ""}
       <dl class="kv2">
         <dt class="h"></dt><dd class="h">Fertile</dd><dd class="h">RIF</dd><dd class="h">Change</dd>
         <dt class="k" title="How central the gene is (eigenvector centrality, 0–1)">Importance</dt><dd class="v">${fmt(eF)}</dd><dd class="v">${fmt(eR)}</dd><dd class="v">${diff(eF, eR, 3)}</dd>
-        <dt class="k" title="Number of links to other genes">Number of links</dt><dd class="v">${dF ?? "—"}</dd><dd class="v">${dR ?? "—"}</dd><dd class="v">${diff(dF, dR, 0)}</dd>
+        <dt class="k" title="Number of links to other genes">Number of links</dt><dd class="v">${dF ?? "n/a"}</dd><dd class="v">${dR ?? "n/a"}</dd><dd class="v">${diff(dF, dR, 0)}</dd>
       </dl>
       </div>
       <div class="detail-section">
-        <h2><span class="badge">F</span>Gene links</h2>
+        <h2><span class="badge">H</span>Gene links</h2>
         ${legend}
         <p class="sub-h">Controls · ${outs.length}</p>
-        ${n.tf ? edgeRows(outs) : `<p class="more">Target genes don't control others here.</p>`}
+        ${n.tf ? edgeRows(outs) : `<p class="more">Target gene · controls nothing here</p>`}
         <p class="sub-h">Controlled by · ${ins.length}</p>
         ${edgeRows(ins)}
       </div>`;
@@ -687,11 +732,6 @@
     else if (state.territory != null) detail.innerHTML = territoryHTML(state.territory);
     else detail.innerHTML = territoryListHTML();
   }
-
-  detail.addEventListener("toggle", (ev) => {
-    const s = ev.target.closest && ev.target.closest(".gsec");
-    if (s && ev.target === s) secOpen[s.dataset.sec] = s.open;
-  }, true);
 
   detail.addEventListener("click", (ev) => {
     const more = ev.target.closest(".g-more");
@@ -906,7 +946,10 @@
   function setPanel(side, open, save = true) {
     document.body.classList.toggle("hide-" + side, !open);
     const btn = document.getElementById("toggle-" + side);
-    if (btn) btn.setAttribute("aria-expanded", String(open));
+    if (btn) {
+      btn.setAttribute("aria-expanded", String(open));
+      btn.textContent = (open ? "Hide " : "Open ") + (side === "left" ? "Controls" : "Details");
+    }
     if (save) { try { localStorage.setItem("grn-open-" + side, open ? "1" : "0"); } catch (e) { /* ignore */ } }
     renderer.resize(); renderer.refresh();
   }

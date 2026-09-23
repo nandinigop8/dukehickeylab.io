@@ -42,7 +42,7 @@ const shot = async (p, name) => { if (OUT) await p.screenshot({ path: `${OUT}/${
   await p.goto(BASE + "?t=" + Date.now(), { waitUntil: "networkidle" });
   await p.waitForTimeout(400);
   const landing = await p.evaluate(() => {
-    const el = document.querySelector(".logo");           // inline SVG lockup
+    const el = document.querySelector(".logo");           // text-only wordmark
     const box = el && el.getBoundingClientRect();
     return { title: document.title, logoOk: !!box && box.width > 200 && box.height > 30,
              wordmark: !!el && /ASTRAEA/.test(el.textContent),
@@ -51,7 +51,7 @@ const shot = async (p, name) => { if (OUT) await p.screenshot({ path: `${OUT}/${
   });
   check("Landing page shows the ASTRAEA logo", landing.logoOk && landing.wordmark && /ASTRAEA/.test(landing.title), JSON.stringify(landing));
   check("Entry page offers desktop / iPad / mobile", landing.entries.join(",") === "atlas.html?ui=desktop,atlas.html?ui=tablet,atlas.html?ui=phone", landing.entries.join(" "));
-  check("Entry page stays minimal (only the three labels)", landing.words <= 6, `${landing.words} words`);
+  check("Entry page stays minimal (title, subtitle, prompt, and three platform labels)", landing.words <= 12, `${landing.words} words`);
   await shot(p, "00_landing");
   await p.click('.entries a[data-ui="desktop"]');
   await p.waitForLoadState("networkidle");
@@ -66,6 +66,14 @@ const shot = async (p, name) => { if (OUT) await p.screenshot({ path: `${OUT}/${
     words: document.querySelector("#help .guide").innerText.split(/\s+/).length }));
   check("Guide is 'Reading Guide in 5 Steps' with 5 numbered cards", guide.title === "Reading Guide in 5 Steps" && guide.cards.length === 5 && guide.cards.every((c, i) => c.startsWith(String(i + 1))), guide.cards.join(" | "));
   check("Guide step cards are concise (< 90 words total)", guide.words < 90, `${guide.words} words`);
+  const guideSections = await p.$$eval("#help .guide-panel > h3", (hs) => hs.map((h) => h.textContent.trim()));
+  check("Guide includes build summary and limitations in one open dialog",
+    guideSections.join("/") === "How this atlas was built/Limitations", guideSections.join(" | "));
+  const candidateSteps = await p.$$eval("#help .candidate-steps li", (ls) => ls.length);
+  check("Guide explains candidate selection", candidateSteps === 4, `${candidateSteps} steps`);
+  const methodsText = await p.$eval("#help .guide-build", (s) => s.innerText);
+  check("Guide explains independent CellOracle and dynGENIE3 support",
+    /CellOracle/.test(methodsText) && /dynGENIE3/.test(methodsText) && /does not prove causality/.test(methodsText));
   await shot(p, "00_help");
   await p.click("#help-done"); await p.waitForTimeout(300);
   check("'Start exploring' closes the guide", !(await p.evaluate(() => document.getElementById("help").open)));
@@ -76,7 +84,7 @@ const shot = async (p, name) => { if (OUT) await p.screenshot({ path: `${OUT}/${
   await p.reload({ waitUntil: "networkidle" }); await p.waitForSelector("#stats div"); await p.waitForTimeout(600);
   check("Guide does not reopen after it has been seen", !(await p.evaluate(() => document.getElementById("help").open)));
   await p.click('button[data-help="limits"]'); await p.waitForTimeout(200);
-  const lim = await p.evaluate(() => document.getElementById("help").open && document.getElementById("help-limits").open);
+  const lim = await p.evaluate(() => document.getElementById("help").open && !!document.getElementById("help-limits"));
   await p.click("#help-close"); await p.waitForTimeout(200);
   check("'Limits of this map' opens the guide at the limits section", lim);
   await seg(p, "colorby", "evidence");
@@ -150,26 +158,42 @@ const shot = async (p, name) => { if (OUT) await p.screenshot({ path: `${OUT}/${
   // Gene with a curated note
   await p.fill("#search", "HAND2"); await p.press("#search", "Enter"); await p.waitForTimeout(900);
   const hand2 = await p.$eval("#detail", (d) => d.innerText);
-  check("HAND2: curated note shown with draft status", /decidualization/i.test(hand2) && /Draft/.test(hand2));
+  check("HAND2: curated implantation summary shown", /decidualization/i.test(hand2));
   const secs = await p.$$eval("#detail .gsec h4", (hs) => hs.map((h) => h.textContent.trim()));
-  check("Gene panel sections A-D in order: Name, Function in implantation, General function, Literature",
-    secs.length === 4 && /^AName/.test(secs[0]) && /^B.*implantation/i.test(secs[1]) && /^C.*general function/i.test(secs[2]) && /^D.*literature/i.test(secs[3]), JSON.stringify(secs));
+  check("Gene panel sections A-F in the agreed order",
+    secs.length === 6 && /^A\s+Name/.test(secs[0]) && /^B\s+roles in implantation/i.test(secs[1])
+    && /^C\s+general roles/i.test(secs[2]) && /^D\s+cell-type specificity/i.test(secs[3])
+    && /^E\s+literature evidence/i.test(secs[4]) && /^F\s+confirmed links/i.test(secs[5]), JSON.stringify(secs));
+  const allOpen = await p.$$eval("#detail .gsec", (ss) => ss.every((s) => s.tagName === "SECTION" && s.querySelector(".gsec-body")?.offsetParent !== null));
+  check("All gene sections stay open", allOpen);
+  const evid = await p.$eval("#detail .gsec[data-sec='E'] table.evid", (tb) => ({
+    cols: [...tb.querySelectorAll("thead th")].map((h) => h.textContent.trim()),
+    rows: tb.querySelectorAll("tbody tr").length,
+    firstRef: tb.querySelector("tbody .ev-cite")?.textContent.trim(),
+  })).catch(() => null);
+  check("Literature evidence is a table with references and findings",
+    !!evid && evid.cols.join("/") === "Reference/Finding" && evid.rows >= 1 && /\(\d{4}\)/.test(evid.firstRef || ""),
+    JSON.stringify(evid));
+  const ct = await p.$$eval("#detail .gsec[data-sec='D'] .ct-row", (rs) => rs.length);
+  check("Cell-type specificity lists all five cell types", ct === 5, `${ct} rows`);
   const rightBadges = await p.$$eval("#detail .badge", (b) => b.map((x) => x.textContent).join(""));
-  check("Gene view cards lettered A-F with the shared badge", rightBadges === "ABCDEF", rightBadges);
+  check("Gene view cards lettered A-H with the shared badge", rightBadges === "ABCDEFGH", rightBadges);
   const sameStyle = await p.evaluate(() => {
     const a = getComputedStyle(document.querySelector(".panel.left .badge")), b = getComputedStyle(document.querySelector("#detail .badge"));
     return a.backgroundColor === b.backgroundColor && a.width === b.width && a.borderRadius === b.borderRadius;
   });
   check("Badges styled identically in left and right panels", sameStyle);
   check("HAND2: alternative names shown (e.g. dHand)", /Also known as.*dHand/.test(hand2));
-  const cites = await p.$$eval(".gsec .note-src a", (as) => as.map((a) => a.href));
-  check("HAND2: note citations link to PubMed", cites.length >= 1 && cites.every((h) => h.startsWith("https://pubmed.ncbi.nlm.nih.gov/")), cites.join(" "));
-  await p.click('#detail .gsec[data-sec="D"] > summary'); await p.waitForTimeout(200);
-  const citeTexts = await p.$$eval('#detail a[href^="https://pubmed"]', (as) => as.map((a) => a.textContent.trim()));
+  check("HAND2: the summary omits the redundant source-status note", !/sources in E/i.test(hand2));
+  const cites = await p.$$eval('#detail .gsec[data-sec="E"] a[href^="https://pubmed"]', (as) => as.map((a) => a.href));
+  check("HAND2: evidence table cites PubMed",
+    cites.length >= 1 && cites.every((h) => h.startsWith("https://pubmed.ncbi.nlm.nih.gov/")), cites.length + " citations");
+  // the "All N on PubMed" search link is deliberately not a PMID citation
+  const citeTexts = await p.$$eval('#detail a[href^="https://pubmed"]', (as) =>
+    as.filter((a) => !a.closest(".ev-foot")).map((a) => a.textContent.trim()));
   check("Citations are PMID hyperlinks only", citeTexts.length > 0 && citeTexts.every((x) => /^PMID \d+$/.test(x)), citeTexts.join(", "));
   const hasRefList = await p.$eval("#detail", (d) => /Sources of the summary/.test(d.innerText) || !!d.querySelector(".cites"));
   check("No written-out reference list in the gene panel", !hasRefList);
-  await p.click('#detail .gsec[data-sec="D"] > summary');
   await shot(p, "04_gene_HAND2");
 
   // Gene without implantation literature -> novel candidate
@@ -181,6 +205,18 @@ const shot = async (p, name) => { if (OUT) await p.screenshot({ path: `${OUT}/${
   await p.fill("#search", "ZEB1"); await p.press("#search", "Enter"); await p.waitForTimeout(700);
   const zeb = await p.$eval("#detail", (d) => d.innerText);
   check("ZEB1: 'Confirmed by 2 methods' tag shown", /Confirmed by 2 methods/.test(zeb));
+  check("ZEB1: co-validation meaning is visible", /independently identified this regulator/.test(zeb) && /does not prove causality/.test(zeb));
+  const zebEvidence = await p.$eval('#detail .gsec[data-sec="E"]', (s) => ({
+    rows: s.querySelectorAll("tbody tr").length,
+    pmids: s.querySelectorAll('a[href^="https://pubmed.ncbi.nlm.nih.gov/"][title="Open on PubMed"]').length,
+    hidden: s.querySelectorAll("[hidden]").length,
+    badge: s.querySelector(".ev-badge")?.textContent.trim(),
+  }));
+  check("ZEB1: all 4 literature papers and PMIDs are visible",
+    zebEvidence.rows === 4 && zebEvidence.pmids === 4 && zebEvidence.hidden === 0 && /· 4$/.test(zebEvidence.badge || ""),
+    JSON.stringify(zebEvidence));
+  const hiddenConfirmedRefs = await p.$$eval('#detail .gsec[data-sec="F"] .more-refs', (els) => els.length);
+  check("ZEB1: confirmed links show every PMID without +N truncation", hiddenConfirmedRefs === 0);
   const litBadges = await p.$$eval("#detail .edge-list .lit", (b) => b.length);
   check("ZEB1: at least one edge carries a CollecTRI 'lit' badge", litBadges > 0, `${litBadges} badges`);
   await shot(p, "05_gene_ZEB1");

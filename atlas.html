@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ASTRAEA · Endometrial Receptivity GRN Atlas</title>
+  <title>ASTRAEA ATLAS</title>
   <meta name="description" content="ASTRAEA: an interactive atlas of the gene regulatory network of the human endometrium across the cycle and in recurrent implantation failure. Hickey Lab, Duke University.">
   <link rel="icon" type="image/svg+xml" href="assets/astraea-mark.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,20 +14,16 @@
 <body>
   <header class="topbar">
     <div class="brand">
-      <a class="brand-home" href="index.html" title="ASTRAEA home"><img src="assets/astraea-mark.svg" alt="" class="brand-star"></a>
-      <div>
-        <h1><a href="index.html" class="wordmark">ASTRAEA</a> <span class="version-pill" title="Demo release, version 1: for review, not for citation">demo_v1</span></h1>
-        <p class="sub" title="Atlas of Single-cell Transcriptional Regulators And Elements of Attachment">Endometrial receptivity GRN atlas · <span id="compartment-label">Stromal</span> cells · Hickey Lab, Duke</p>
-      </div>
+      <h1><a href="index.html" class="wordmark">ASTRAEA ATLAS</a></h1>
     </div>
     <nav class="views" aria-label="View">
       <button class="view-tab active" data-view="rif" title="Healthy (fertile) vs recurrent implantation failure, both at LH+7 (the window of implantation)">Fertile vs RIF · LH+7</button>
       <button class="view-tab" data-view="woi" disabled title="Coming next: how the network changes across the cycle">Across the cycle <em>soon</em></button>
     </nav>
-    <button class="help-btn" id="help-open" aria-haspopup="dialog"><span class="badge">?</span>Reading guide</button>
+    <button class="help-btn" id="help-open" aria-haspopup="dialog">Reading Guide <span class="badge">?</span></button>
     <div class="panel-toggles">
-      <button class="pt" id="toggle-left" aria-expanded="true" aria-controls="panel-left" title="Show or hide the controls panel">Controls</button>
-      <button class="pt" id="toggle-right" aria-expanded="true" aria-controls="panel-right" title="Show or hide the gene details panel">Details</button>
+      <button class="pt" id="toggle-left" aria-expanded="true" aria-controls="panel-left">Hide Controls</button>
+      <button class="pt" id="toggle-right" aria-expanded="true" aria-controls="panel-right">Hide Details</button>
     </div>
     <div class="search">
       <input id="search" type="search" list="gene-list" placeholder="Find a gene, e.g. HAND2" autocomplete="off" spellcheck="false" aria-label="Find a gene">
@@ -160,29 +156,30 @@
         </li>
       </ol>
 
-      <div class="guide-more">
-        <details>
-          <summary>Glossary</summary>
-          <dl class="glossary">
-            <dt>RIF</dt><dd>Recurrent implantation failure</dd>
-            <dt>LH+7</dt><dd>Window of implantation (7 days after LH surge)</dd>
-            <dt>Regulator (TF)</dt><dd>Transcription factor: switches genes on/off</dd>
-            <dt>Importance</dt><dd>How central a gene is (eigenvector centrality)</dd>
-            <dt>Link strength</dt><dd>Model estimate: + on, − off</dd>
-            <dt>Known link</dt><dd>Also reported in experiments (CollecTRI)</dd>
-            <dt>Confirmed by 2 methods</dt><dd>Key regulator in CellOracle and dynGENIE3</dd>
-            <dt>Novel candidate</dt><dd>Central here, little research: a lead</dd>
-          </dl>
-        </details>
-        <details id="help-limits">
-          <summary>Limits of this map</summary>
+      <div class="guide-reference">
+        <section class="guide-panel guide-build">
+          <h3>How this atlas was built</h3>
+          <p>Single-cell RNA sequencing was grouped into five major cell types. CellOracle inferred 2,000 regulator→target links for each fertile timepoint and for RIF at LH+7. The union network was divided into Leiden territories and given one fixed layout. NCBI supplies gene and PubMed records; CollecTRI supplies experimentally reported links.</p>
+          <h4>Confirmed by 2 methods</h4>
+          <p>CellOracle identifies condition- and timepoint-specific links. dynGENIE3 independently ranks regulators along fertile pseudotime. Agreement raises confidence; it does not prove causality.</p>
+          <h4>How candidates are selected</h4>
+          <ol class="candidate-steps">
+            <li>Start with a territory hub or a top-20 network-change regulator.</li>
+            <li>Prioritize large fertile-to-RIF changes and links gained or lost in RIF.</li>
+            <li>Check support from dynGENIE3, implantation papers, and confirmed links.</li>
+            <li>Treat a novel candidate as a testable lead; not a validated mechanism.</li>
+          </ol>
+        </section>
+        <section class="guide-panel" id="help-limits">
+          <h3>Limitations</h3>
           <ul class="help-limits">
             <li>Links are predictions from expression, not experiments.</li>
             <li>One biopsy per woman; RIF sampled only at LH+7 and pooled.</li>
             <li>Territories are an algorithmic grouping, not proven pathways.</li>
-            <li>Literature is collected automatically; "Draft" notes await lab review.</li>
+            <li>Network importance is not gene-expression abundance.</li>
+            <li>Different cell types have unequal cell counts; do not compare network size between them.</li>
           </ul>
-        </details>
+        </section>
       </div>
       <button class="help-done" id="help-done">Start exploring →</button>
     </div>

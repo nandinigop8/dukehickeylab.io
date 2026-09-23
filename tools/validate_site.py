@@ -17,7 +17,6 @@ import gzip
 import io
 import json
 import math
-import random
 import re
 import subprocess
 import sys
@@ -227,6 +226,9 @@ def validate_literature(comp, g):
     check("evidence tier consistent with paper count and thresholds", tier_ok, str(bga.TIERS))
     check("paper lists are real PubMed records (title + year present)",
           all(p.get("title") and p.get("year") for v in a.values() for p in v["papers"]))
+    check("paper lists are complete (stored count equals reported count)",
+          all(len(v["papers"]) == v["nImpl"] for v in a.values()),
+          f"{sum(len(v['papers']) for v in a.values())} gene-paper records")
     check("every implantation GeneRIF passes the implantation classifier",
           all(bga.is_implantation_rif(r["text"]) for v in a.values() for r in v["rifsImpl"]))
     check("no 'other endometrium' GeneRIF is misfiled as implantation",
@@ -239,24 +241,107 @@ def validate_literature(comp, g):
           all(n["status"] in ("draft", "reviewed") for n in notes.values()),
           f"{sum(n['status'] == 'reviewed' for n in notes.values())} reviewed")
 
-    # Literature edges: only real network edges; spot-check against raw CollecTRI
+    # Literature edges: only real network edges; validate every edge and PMID
+    # against the raw CollecTRI download.
     lit = json.loads((SITE / "data" / "literature_edges.json").read_text())["edges"]
     net = {f"{ids[s]}>{ids[t]}" for s, t, _ in g["edges"]}
     mine = {k: v for k, v in lit.items() if k in net}
     check("literature edge entries have a valid sign and >= 1 reference",
-          all(v["sign"] in "+-?" and v["nRefs"] >= 1 and v["refs"] for v in lit.values()), f"{len(mine)} in {comp}")
+          all(v["sign"] in "+-?" and v["nRefs"] == len(v["refs"]) >= 1 for v in lit.values()),
+          f"{len(mine)} in {comp}; {sum(len(v['refs']) for v in mine.values())} references")
     if not have_cache("collectri.tsv"):
-        skip("CollecTRI support re-derived from raw download (400 random edges)")
+        skip("all CollecTRI-supported edges and references re-derived from raw download")
         return
-    raw = (CACHE / "collectri.tsv").read_text().splitlines()
-    head = raw[0].split("\t")
-    s_i, t_i = head.index("source_genesymbol"), head.index("target_genesymbol")
-    r_i = head.index("references")
-    ref = {f"{f[s_i]}>{f[t_i]}" for f in (ln.split("\t") for ln in raw[1:]) if f[r_i].strip()}
-    random.seed(0)
-    sample = random.sample(sorted(net), min(400, len(net)))
-    agree = all((k in ref) == (k in lit) for k in sample)
-    check("CollecTRI support re-derived from raw download (400 random edges)", agree)
+    expected = bga.collectri(net)
+    check("all CollecTRI-supported edges and references re-derived from raw download",
+          expected == mine, f"{len(net)} network edges checked")
+
+
+def validate_citations(comps):
+    """Validate every literature record in every generated annotation file."""
+    print(f"\n== all literature data: citation accuracy ({', '.join(comps)})")
+    by_comp = {c: json.loads((SITE / "data" / f"{c}_annotations.json").read_text())["genes"]
+               for c in comps}
+    shown = {}
+    for c, a in by_comp.items():
+        for g, v in a.items():
+            for r in ((v.get("rifsImpl") or []) + (v.get("papers") or [])
+                      + ((v.get("note") or {}).get("cites") or [])):
+                if r.get("pmid"):
+                    shown.setdefault(r["pmid"], []).append((c, g, r))
+    check("every displayed citation carries author, year and title",
+          all(r.get("author") and r.get("year") and r.get("title")
+              for recs in shown.values() for _, _, r in recs),
+          f"{len(shown)} distinct PMIDs across {len(comps)} compartments")
+
+    # The generated paper arrays must exactly reproduce every PMID in NCBI's
+    # cached gene->PubMed query result, not merely agree with their own count.
+    if have_cache("mygene_v2.json", "gene_pubmed_implantation.json"):
+        mg = json.loads((CACHE / "mygene_v2.json").read_text())
+        ent = {h["query"]: str(h["entrezgene"]) for h in mg
+               if "entrezgene" in h and not h.get("notfound")}
+        links = json.loads((CACHE / "gene_pubmed_implantation.json").read_text())
+        incomplete = []
+        for c, a in by_comp.items():
+            for g, v in a.items():
+                expected = set(links.get(ent.get(g, ""), []))
+                actual = {p["pmid"] for p in v.get("papers", [])}
+                if actual != expected or v.get("nImpl") != len(expected):
+                    incomplete.append(f"{c}/{g}")
+        check("every NCBI-linked implantation paper is stored for every gene",
+              not incomplete, f"{sum(len(a) for a in by_comp.values())} compartment-gene records checked"
+              if not incomplete else ", ".join(incomplete[:8]))
+    else:
+        skip("all paper lists matched to the NCBI gene-to-PubMed source")
+
+    lit = json.loads((SITE / "data" / "literature_edges.json").read_text())["edges"]
+    edge_pmids = {p for v in lit.values() for p in v.get("refs", [])}
+    pick = sorted(set(shown) | edge_pmids)
+    live = {}
+    try:
+        for i in range(0, len(pick), 200):
+            result = bga.eutils("esummary", {"db": "pubmed", "id": ",".join(pick[i:i + 200])})["result"]
+            live.update({pid: result[pid] for pid in result.get("uids", [])})
+    except Exception as e:  # noqa: BLE001
+        skip("all citation accuracy checks against live PubMed", f"no network ({e})")
+        return
+    unresolved = sorted(set(pick) - set(live))
+    check("every annotation and confirmed-link PMID resolves in PubMed",
+          not unresolved,
+          f"{len(pick)} distinct PMIDs ({len(shown)} annotation; {len(edge_pmids)} confirmed-link)"
+          if not unresolved else ", ".join(unresolved[:8]))
+    bad = []
+    for pid in shown:
+        real = live.get(pid, {})
+        want_author = (real.get("sortfirstauthor") or "").strip()
+        want_year = (real.get("pubdate") or "")[:4]
+        want_title = (real.get("title") or "").rstrip(".").strip().lower()
+        for c, g, r in shown[pid]:
+            if r.get("author", "") != want_author or r.get("year", "") != want_year \
+               or r.get("title", "").strip().lower() != want_title:
+                bad.append(f"{c}/{g}/{pid}")
+    check(f"all stored citation metadata match PubMed exactly ({len(shown)} PMIDs)",
+          not bad, ", ".join(bad[:6]))
+
+    # gene-specific lines must come from that gene's own GeneRIF records
+    if have_cache("generifs_basic.gz", "mygene_v2.json"):
+        mg = json.loads((CACHE / "mygene_v2.json").read_text())
+        ent = {h["query"]: str(h["entrezgene"]) for h in mg if "entrezgene" in h and not h.get("notfound")}
+        want = {ent[g] for a in by_comp.values() for g in a if g in ent}
+        pairs = set()
+        with gzip.open(CACHE / "generifs_basic.gz", "rt", encoding="utf-8", errors="replace") as fh:
+            next(fh)
+            for line in fh:
+                tax, gid, pm, _ts, _txt = line.split("\t", 4)
+                if tax == "9606" and gid in want:
+                    for x in pm.split(","):
+                        pairs.add((gid, x))
+        wrong = [f"{c}/{g}/{r['pmid']}" for c, a in by_comp.items() for g, v in a.items()
+                 for r in (v.get("rifsImpl") or []) if g in ent and (ent[g], r["pmid"]) not in pairs]
+        check("every gene-specific finding comes from that gene's own GeneRIF record",
+              not wrong, ", ".join(wrong[:5]))
+    else:
+        skip("gene-specific findings traced to their GeneRIF records")
 
 
 def validate_literature_tools():
@@ -312,16 +397,29 @@ def validate_site_files(comps):
     print("\n== site files")
     landing = (SITE / "index.html").read_text()
     html = (SITE / "atlas.html").read_text()
+    js = (SITE / "app.js").read_text()
     for f in ["style.css", "app.js"]:
         check(f"atlas.html references existing {f}", f in html and (SITE / f).exists())
     check("landing page offers the three platform entries",
           all(f'atlas.html?ui={u}' in landing for u in ("desktop", "tablet", "phone")))
+    check("landing page introduces the platform choices",
+          '<p class="entry-label">Experience this in</p>' in landing)
     check("landing page asset present: landing.css", "landing.css" in landing and (SITE / "landing.css").exists())
     check("logo mark file present and used as the icon",
           (SITE / "assets" / "astraea-mark.svg").exists() and "assets/astraea-mark.svg" in landing and "assets/astraea-mark.svg" in html)
-    check("landing page carries the inline vector wordmark",
-          '<svg class="logo"' in landing and ">ASTRAEA<" in landing and (SITE / "assets" / "astraea-logo.svg").exists())
+    check("landing page carries the text-only ASTRAEA ATLAS wordmark",
+          '<h1 class="logo">ASTRAEA ATLAS</h1>' in landing and '<svg class="logo"' not in landing)
+    check("landing page carries the signature-style edition subtitle",
+          '<p class="tagline">Human Endometrial Receptivity Edition</p>' in landing and "Mrs+Saint+Delafield" in landing)
     check("both pages use the ASTRAEA name", "ASTRAEA" in landing and "ASTRAEA" in html)
+    check("Reading Guide trigger ends with a question-mark badge",
+          'Reading Guide <span class="badge">?</span>' in html)
+    check("Reading Guide keeps build summary, candidate selection, and limitations open together",
+          all(x in html for x in ('How this atlas was built', 'class="candidate-steps"',
+                                  'id="help-limits"')) and ">Glossary<" not in html and "<details" not in html)
+    check("Reading Guide explains independent CellOracle and dynGENIE3 support",
+          "dynGENIE3 independently ranks regulators along fertile pseudotime" in html)
+    check("gene summaries omit the redundant source-status line", "sources in E" not in js)
     try:
         subprocess.run(["node", "--check", str(SITE / "app.js")], check=True, capture_output=True)
         check("app.js parses (node --check)", True)
@@ -329,7 +427,6 @@ def validate_site_files(comps):
         check("app.js parses (node --check)", True, "node not installed -- skipped")
     except subprocess.CalledProcessError as e:
         check("app.js parses (node --check)", False, e.stderr.decode()[:200])
-    js = (SITE / "app.js").read_text()
     m = re.search(r'const COMPARTMENT = "(\w+)"', js)
     check("atlas page's compartment has graph + annotation data",
           m and (SITE / "data" / f"{m.group(1)}_graph.json").exists()
@@ -347,10 +444,13 @@ def validate_site_files(comps):
 
 def main():
     comps = sys.argv[1:] or ["stromal"]
+    literature_comps = sorted(p.name.removesuffix("_annotations.json")
+                              for p in (SITE / "data").glob("*_annotations.json"))
     t0 = time.time()
     for c in comps:
         g = validate_graph(c)
         validate_literature(c, g)
+    validate_citations(literature_comps)
     validate_literature_tools()
     validate_site_files(comps)
     n_fail = sum(1 for ok, *_ in results if not ok)
@@ -358,7 +458,7 @@ def main():
     if skipped:
         summary += f"; {len(skipped)} skipped (see the SKIP lines above)"
     print(f"\n{summary}")
-    report = [f"Validation report -- {time.strftime('%Y-%m-%d %H:%M')} -- compartments: {', '.join(comps)}",
+    report = [f"Validation report -- {time.strftime('%Y-%m-%d %H:%M')} -- networks: {', '.join(comps)}; literature: {', '.join(literature_comps)}",
               summary, ""] + [f"[{'PASS' if ok else 'FAIL'}] {n}" + (f" -- {d}" if d else "") for ok, n, d in results] \
         + [f"[SKIP] {n} -- {w}" for n, w in skipped]
     (DOCS / "validation_report.txt").write_text("\n".join(report) + "\n")

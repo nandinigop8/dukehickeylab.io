@@ -1,5 +1,5 @@
-Validation report -- 2026-09-22 22:34 -- compartments: stromal
-32/32 checks passed (0s); 3 skipped (see the SKIP lines above)
+Validation report -- 2026-09-23 00:53 -- networks: stromal; literature: stromal
+42/42 checks passed (57s); 5 skipped (see the SKIP lines above)
 
 [PASS] groups are the 6 CellOracle groups in order
 [PASS] gene ids unique -- 1000 genes
@@ -14,25 +14,37 @@ Validation report -- 2026-09-22 22:34 -- compartments: stromal
 [PASS] every network gene has an annotation record -- 0 missing
 [PASS] evidence tier consistent with paper count and thresholds -- [(10, 'strong'), (3, 'moderate'), (1, 'limited'), (0, 'none')]
 [PASS] paper lists are real PubMed records (title + year present)
+[PASS] paper lists are complete (stored count equals reported count) -- 1031 gene-paper records
 [PASS] every implantation GeneRIF passes the implantation classifier
 [PASS] no 'other endometrium' GeneRIF is misfiled as implantation
 [PASS] curated notes: every citation resolved to a PubMed record -- 36 notes in stromal
 [PASS] curated notes: status is 'draft' or 'reviewed' -- 0 reviewed
-[PASS] literature edge entries have a valid sign and >= 1 reference -- 250 in stromal
+[PASS] literature edge entries have a valid sign and >= 1 reference -- 250 in stromal; 2505 references
+[PASS] every displayed citation carries author, year and title -- 884 distinct PMIDs across 1 compartments
+[PASS] every annotation and confirmed-link PMID resolves in PubMed -- 6096 distinct PMIDs (884 annotation; 5215 confirmed-link)
+[PASS] all stored citation metadata match PubMed exactly (884 PMIDs)
 [PASS] GeneRIF classifier: known false positives rejected, true cases kept
 [PASS] curation check rejects an untraceable citation (negative test)
 [PASS] atlas.html references existing style.css
 [PASS] atlas.html references existing app.js
 [PASS] landing page offers the three platform entries
+[PASS] landing page introduces the platform choices
 [PASS] landing page asset present: landing.css
 [PASS] logo mark file present and used as the icon
-[PASS] landing page carries the inline vector wordmark
+[PASS] landing page carries the text-only ASTRAEA ATLAS wordmark
+[PASS] landing page carries the signature-style edition subtitle
 [PASS] both pages use the ASTRAEA name
+[PASS] Reading Guide trigger ends with a question-mark badge
+[PASS] Reading Guide keeps build summary, candidate selection, and limitations open together
+[PASS] Reading Guide explains independent CellOracle and dynGENIE3 support
+[PASS] gene summaries omit the redundant source-status line
 [PASS] app.js parses (node --check)
 [PASS] atlas page's compartment has graph + annotation data -- stromal
 [PASS] CDN library reachable: graphology@0.26.0/dist/graphology.umd.min.js
 [PASS] CDN library reachable: sigma@3.0.3/dist/sigma.min.js
-[PASS] site folder size reasonable for sharing (< 25 MB) -- 2.9 MB
+[PASS] site folder size reasonable for sharing (< 25 MB) -- 2.4 MB
 [SKIP] stromal: checks against the original exports in analysis_data/ -- needs analysis_data/stromal/ -- copy it from the analysis workspace
-[SKIP] CollecTRI support re-derived from raw download (400 random edges) -- needs the .cache folder -- run build_gene_annotations.py once
+[SKIP] all CollecTRI-supported edges and references re-derived from raw download -- needs the .cache folder -- run build_gene_annotations.py once
+[SKIP] all paper lists matched to the NCBI gene-to-PubMed source -- needs the .cache folder -- run build_gene_annotations.py once
+[SKIP] gene-specific findings traced to their GeneRIF records -- needs the .cache folder -- run build_gene_annotations.py once
 [SKIP] every curated-note PMID is linked to that gene in NCBI (GeneRIF or gene2pubmed) -- needs the .cache folder -- run build_gene_annotations.py once

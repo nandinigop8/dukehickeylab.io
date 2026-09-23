@@ -1,63 +1,87 @@
-# ASTRAEA · Endometrial Receptivity GRN Atlas
+# ASTRAEA ATLAS
 
-**Live site:** https://nandinigop8.github.io/dukehickeylab.io/
+**[Open the live ASTRAEA ATLAS](https://nandinigop8.github.io/dukehickeylab.io/)**
 
-ASTRAEA (*Atlas of Single-cell Transcriptional Regulators And Elements of
-Attachment*) maps how transcription factors switch genes on and off in the
-human endometrium — across the fertile cycle (LH+3 → LH+11) and in
-**recurrent implantation failure (RIF)** — and pairs every gene with its
-published implantation literature.
+ASTRAEA ATLAS is an interactive gene regulatory network atlas of human
+endometrial receptivity. The current release compares fertile and recurrent
+implantation failure (RIF) stromal networks at LH+7 and connects genes and
+regulatory links to their available PubMed evidence.
 
-Hickey Lab · Department of Biomedical Engineering · Duke University.
-`demo_v1` is a review release, not for citation.
+Hickey Lab, Department of Biomedical Engineering, Duke University.
+
+## What the atlas shows
+
+- Predicted transcription factor to target relationships from CellOracle
+- Fertile links, RIF links, and links shared by both conditions
+- Gene centrality within the fertile LH+7 network
+- Independent regulator support from dynGENIE3 along fertile pseudotime
+- Complete stored PubMed records for each gene and every stored PMID for
+  literature-supported regulatory links
+
+CellOracle and dynGENIE3 provide complementary evidence. CellOracle identifies
+condition and timepoint-specific regulatory links; dynGENIE3 independently
+ranks regulators along fertile pseudotime. Agreement between the two methods
+raises confidence, but does not establish causality.
+
+## How candidates are selected
+
+1. Start with transcription factors that occupy central positions in the
+   fertile LH+7 network.
+2. Prioritize regulators whose network position or links differ in RIF.
+3. Raise confidence when CellOracle and dynGENIE3 support the same regulator.
+4. Use PubMed and CollecTRI evidence to distinguish established biology from
+   candidates that require experimental validation.
+
+## Important limitations
+
+The displayed links are computational predictions, not proven cause and
+effect. Network centrality describes position in the inferred network, not
+gene expression. RIF samples are available at LH+7, and inferred candidates
+require independent experimental validation.
 
 ## Repository layout
 
-| Path | What it is |
+| Path | Contents |
 |---|---|
-| `index.html` | Entry page: ASTRAEA logo + Desktop / iPad / Mobile tabs |
-| `atlas.html`, `app.js`, `style.css`, `landing.css` | The atlas, and the entry-page styles |
-| `assets/` | ASTRAEA logo + star mark (SVG) |
-| `data/` | Site data: network, gene annotations, literature-supported links |
-| `tools/` | Build scripts, validator, browser test, local server |
-| `curation/` | Draft gene notes + review rules |
-| `docs/` | Methods guide, design/functionality notes, progress log |
-| `requirements.txt`, `environment.yml` | Python packages for the build scripts |
+| `index.html` | Responsive entry page for Desktop, iPad, and Mobile |
+| `atlas.html`, `app.js`, `style.css`, `landing.css` | Interactive atlas and presentation styles |
+| `data/` | Network, gene annotation, and literature-link data used by the site |
+| `tools/` | Data builders, validation suite, browser tests, and local server |
+| `curation/` | Curated implantation summaries and review guidance |
+| `docs/` | Methods, functionality, progress, and validation documentation |
+| `requirements.txt`, `environment.yml` | Reproducible build dependencies |
 
 ## Run locally
 
 ```bash
-tools/serve_local.sh          # or: python3 -m http.server 8000 --bind 127.0.0.1
-# open http://127.0.0.1:8000/
+tools/serve_local.sh
+# Open http://127.0.0.1:8000/
 ```
-Opening the HTML files by double-clicking will not work: browsers block the
-data files over `file://`.
 
-### How the platform tabs work
+The site must be served over HTTP because browsers block its data requests
+when the HTML files are opened directly with `file://`.
 
-Each tab opens `atlas.html?ui=desktop|tablet|phone`, which sets the opening
-panel widths (phone starts with both panels closed) and is then stripped from
-the URL, so shared links and reloads keep whatever the visitor chose. The
-"Controls" and "Details" buttons in the atlas top bar collapse either panel.
-
-## Check before pushing
+## Validate
 
 ```bash
-python3 tools/validate_site.py stromal        # data + site checks
-node tools/tests/browser_smoke.js http://127.0.0.1:8000/   # in-browser checks
+python3 tools/validate_site.py stromal
+node tools/tests/browser_smoke.js http://127.0.0.1:8000/
 ```
-Checks that need files not kept in this repo are reported as **SKIP**, never
-as a pass. Pushing to `main` republishes the site through GitHub Pages.
 
-## Rebuilding the data (optional)
+The latest complete development run passed 61 of 61 data and site checks and
+55 of 55 browser checks. Checks requiring analysis files that are not stored
+in this publication repository are reported as skipped.
 
-Needs the exported CellOracle/dynGENIE3 results from the lab's analysis
-workspace, copied to `analysis_data/` (git-ignored, ~52 MB):
+## Rebuild the data
+
+Rebuilding requires the exported CellOracle and dynGENIE3 results from the
+analysis workspace in the git-ignored `analysis_data/` directory.
 
 ```bash
 pip install -r requirements.txt
-python3 tools/build_territory_graph.py stromal     # map data
-python3 tools/build_gene_annotations.py            # literature (downloads ~100 MB once)
+python3 tools/build_territory_graph.py stromal
+python3 tools/build_gene_annotations.py
 ```
 
-More detail, including what not to break: [`docs/HANDOFF.md`](docs/HANDOFF.md).
+See [`docs/METHODS_AND_DATA_GUIDE.md`](docs/METHODS_AND_DATA_GUIDE.md) for the
+full methodology and data dictionary.

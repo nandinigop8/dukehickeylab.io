@@ -304,3 +304,76 @@ cycle" scrubber) is preserved on branch nandini-version-backup.
 VALIDATION. 49/49 data + site checks, 45/45 browser checks (new: entry page
 offers the three platforms, entry page stays minimal, Controls button hides
 and restores the left panel, mobile entry opens with both panels closed).
+
+[2026-09-22] v1.5: standardised styling, gene panel A-H, 3D logo
+----------------------------------------------------------------
+NAMING. Header is "ASTRAEA v1.5 · GRN Atlas of Endometrial Receptivity";
+the cell type and lab line moved out of the header (cell type is named in the
+Territories card, the reading guide and section D).
+
+TYPE SCALE. The app had 14 ad-hoc font sizes; now five tokens (--fs-xs 11 /
+sm 12 / md 13 / lg 15 / xl 20) and every rule uses one. Card headers are one
+rule shared by both panels (bold 700, uppercase, full-bleed strip, 20 px
+badge). The "Currently shown" card had its labels in the mono face, which is
+why it looked foreign: labels are now the UI face, only numbers are mono with
+tabular figures.
+
+GENE PANEL (right). "TF · GENE" lockup, then eight always-open cards:
+  A Name · B Roles in implantation · C General roles ·
+  D Cell-type specificity · E Literature evidence · F Confirmed links ·
+  G In this network · H Gene links
+- D is new: where the gene sits in all five compartment networks (centrality
+  percentile at fertile LH+7). Network position, not expression -- the
+  exports carry no per-cell expression, and the UI says so.
+- E is a table: PMID · Author et al. (year) · journal | gene-specific finding
+  and, when it differs, the paper title labelled "Paper:". GeneRIF lines are
+  often the title verbatim, so identical text is shown once. Four rows, then
+  "Show N more", plus "All N on PubMed" (gene + implantation search).
+- Citations live only in E; B ends with "Draft · sources in E".
+
+BUILD. build_gene_annotations.py now also stores the first author and year
+for every PMID it keeps (esummary sortfirstauthor; cache rif_citations.json)
+and computes the per-compartment cell-type profile.
+
+VALIDATION. New live check: a random sample of displayed citations is
+re-fetched from PubMed and compared field by field (author, year, title), and
+every gene-specific line must come from that gene's own GeneRIF record.
+52 data checks, 49 browser checks.
+
+LOGO. Redrawn after the Astra (Valorant) cosmic-disc reference the user sent:
+a smaller faceted star inside a thick tilted ring ("beyblade"). It is真 3D:
+the star's two side points lie IN the ring plane (-22°) while the vertical
+spike stands perpendicular; eight facets are shaded by their angle to a fixed
+upper-left light; the ring's far half passes behind the star and the near half
+crosses in front, with a specular streak. Rose-gold wordmark (Cinzel) kept.
+
+[2026-09-23] Complete literature database, unified guide, text-only landing
+---------------------------------------------------------------------------
+LANDING. Removed every star/ring ornament. The front is now a natural-width
+Cinzel "ASTRAEA ATLAS" wordmark plus "Human Endometrial Receptivity Edition"
+in a thin Mrs Saint Delafield signature face with a pearl-silver gradient and
+subtle flourish. The atlas header is also simply ASTRAEA ATLAS; a small
+"Experience this in" prompt introduces the three device choices.
+
+LITERATURE. Removed both hidden truncations:
+- build_gene_annotations.py now retrieves and stores metadata for every
+  NCBI-linked implantation paper, not the three newest. ZEB1 now correctly
+  displays all 4 records, including PMID 28490276.
+- literature_edges.json now stores every CollecTRI PMID per confirmed link,
+  not five; Section F displays every link and every PMID rather than six links,
+  two PMIDs and a non-expandable +N marker.
+- Section E displays every stored paper immediately (no Show-more control).
+  The redundant "Draft · sources in E" line was removed from Section B.
+
+READING GUIDE. The header trigger is "Reading Guide ?". One open dialog now
+contains the five visual reading steps, a concise build summary, four-step
+candidate-selection workflow, and limitations. These sections are visible
+together rather than separately collapsed; the glossary was removed by request.
+
+VALIDATION. Expanded from sampled checks to complete checks across all five
+annotation datasets. Confirmed: 4,259 compartment-gene records reproduce the
+full cached NCBI gene-to-PubMed mapping; all 1,357 annotation PMIDs have exact
+live PubMed metadata; all 6,569 unique annotation/confirmed-link PMIDs resolve;
+all 5,556 Stromal network edges were checked against raw CollecTRI, including
+all 2,505 references on the 250 supported Stromal edges. Full suite passed
+60/60 after the final guide, landing-page, font, and source-note edits.
