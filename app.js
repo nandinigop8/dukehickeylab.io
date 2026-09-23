@@ -1,6 +1,5 @@
 /*
- * Receptivity Atlas -- Fertile LH+7 vs RIF LH+7 / across-the-cycle territory view.
- * A project of the Hickey Lab, Department of Biomedical Engineering, Duke University.
+ * Endometrial GRN Explorer -- Fertile LH+7 vs RIF LH+7 territory view.
  *
  * Data: data/<compartment>_graph.json, built by
  *   ../script/build_territory_graph.py
@@ -16,43 +15,8 @@
   "use strict";
 
   const COMPARTMENT = "stromal";
-  // Index into data.groups = ["Fertile_LH+3","Fertile_LH+5","Fertile_LH+7","Fertile_LH+9","Fertile_LH+11","RIF_LH+7"].
-  // F/R are the CURRENT comparison pair: fixed at (Fertile_LH+7, RIF_LH+7) in the
-  // "rif" view, or (previous timepoint, this timepoint) in the "woi" view --
-  // see syncPair(). Every place below that reads eig[F]/eig[R], deg[F]/deg[R],
-  // or an edge's cF/cR/inF/inR/status is reading "whichever pair is current".
-  let F = 2, R = 5;
-  const TP = [0, 1, 2, 3, 4];             // fertile timepoint indices, LH+3 .. LH+11
-  const TP_LABEL = ["LH+3", "LH+5", "LH+7", "LH+9", "LH+11"];
-  const VIEW_TEXT = {
-    rif: {
-      kicker: "Stromal cells · Fertile vs RIF · LH+7",
-      modeTitle: "Show links from", modeFertile: "Fertile only", modeRif: "RIF only",
-      sizeFertile: "Fertile", sizeRif: "RIF", colA: "Fertile", colB: "RIF",
-      onlyChanged: "Only links that change in RIF",
-      legendRetained: "In both", legendGained: "New in RIF", legendLost: "Missing in RIF",
-      legendAbsent: "Not in LH+7 networks",
-      status: { retained: "In both", gained: "New in RIF", lost: "Missing in RIF" },
-      modeHint: { both: "Line colour = change in RIF", fertile: "Red = missing in RIF", rif: "Blue = new in RIF" },
-      sizeHint: { fertile: "Bigger = more central in fertile", rif: "Bigger = more central in RIF", delta: "Bigger = bigger change" },
-      edgeColTitle: "Model estimate of link strength in the fertile and RIF networks",
-      edgeColHead: "fertile → RIF",
-    },
-    woi: {
-      kicker: "Stromal cells · Across the fertile cycle · LH+3 → LH+11",
-      modeTitle: "Show links from", modeFertile: "Earlier timepoint", modeRif: "This timepoint",
-      sizeFertile: "Earlier", sizeRif: "This timepoint", colA: "Earlier", colB: "Now",
-      onlyChanged: "Only links that change here",
-      legendRetained: "In both timepoints", legendGained: "New here", legendLost: "Missing here",
-      legendAbsent: "Not in either timepoint's network",
-      status: { retained: "In both", gained: "New here", lost: "Missing here" },
-      modeHint: { both: "Line colour = change since last timepoint", fertile: "Red = missing now", rif: "Blue = new now" },
-      sizeHint: { fertile: "Bigger = more central at the earlier timepoint", rif: "Bigger = more central now", delta: "Bigger = bigger change" },
-      edgeColTitle: "Model estimate of link strength, earlier timepoint vs this one",
-      edgeColHead: "earlier → now",
-    },
-  };
-  function TXT() { return VIEW_TEXT[state.view]; }
+  const F = 2; // index of Fertile_LH+7 in data.groups
+  const R = 5; // index of RIF_LH+7
 
   // sigma blends with premultiplied alpha, so translucent edge colors must be
   // premultiplied too -- otherwise faint gray edges stack up to white.
@@ -76,8 +40,6 @@
   };
 
   const state = {
-    view: "rif",          // rif | woi
-    tp: 2,                 // fertile timepoint index (woi view), default LH+7
     mode: "both",        // both | fertile | rif
     sizeBy: "fertile",   // fertile | rif | delta
     colorBy: "territory",
@@ -89,20 +51,6 @@
     selected: null,
     territory: null,
   };
-
-  // Recompute the (F, R) pair for the current view/timepoint, and refresh
-  // every edge's derived status against it. Call whenever view or tp changes.
-  function syncPair() {
-    if (state.view === "rif") { F = 2; R = 5; }
-    else { R = TP[state.tp]; F = state.tp > 0 ? TP[state.tp - 1] : TP[state.tp]; }
-    if (!graph.size) return; // edges not built yet on first call
-    graph.forEachEdge((e, a) => {
-      const cF = a.c[F], cR = a.c[R];
-      const inF = cF != null, inR = cR != null;
-      const status = inF && inR ? "retained" : inF ? "lost" : inR ? "gained" : null;
-      graph.mergeEdgeAttributes(e, { status, inF, inR, cF, cR });
-    });
-  }
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -152,16 +100,17 @@
 
   for (const [s, t, c] of data.edges) {
     const a = data.nodes[s], b = data.nodes[t];
+    const inF = c[F] != null, inR = c[R] != null;
+    const status = inF && inR ? "retained" : inF ? "lost" : inR ? "gained" : null;
     const lit = litEdges[`${a.id}>${b.id}`] || null;
     graph.addDirectedEdge(a.id, b.id, {
-      c, // raw per-group coef_mean array; status/inF/inR/cF/cR derived by syncPair()
+      status, inF, inR, cF: c[F], cR: c[R],
       sm: a.m, tm: b.m, cross: a.m !== b.m,
       lit,
       litGenes: graph.getNodeAttribute(a.id, "litGene") && graph.getNodeAttribute(b.id, "litGene"),
       size: 0.5, color: C.retained,
     });
   }
-  syncPair();
 
   // ---------------------------------------------------------------- rules
   function edgeShown(a) {
@@ -479,18 +428,12 @@
   renderer.on("afterRender", () => { drawOverlay(); drawSelection(); });
 
   // ---------------------------------------------------------------- territory summaries
-  // Recomputed on every update() -- depends on the current status of every
-  // edge, which changes with the view/timepoint (see syncPair()).
-  let tStats = [];
-  function computeTStats() {
-    tStats = T.map(() => ({ gained: 0, lost: 0, retained: 0, inGained: 0, inLost: 0, inRetained: 0 }));
-    graph.forEachEdge((e, a) => {
-      if (!a.status) return;
-      for (const m of new Set([a.sm, a.tm])) tStats[m][a.status]++;
-      if (!a.cross) tStats[a.sm]["in" + a.status[0].toUpperCase() + a.status.slice(1)]++;
-    });
-  }
-  computeTStats();
+  const tStats = T.map(() => ({ gained: 0, lost: 0, retained: 0, inGained: 0, inLost: 0, inRetained: 0 }));
+  graph.forEachEdge((e, a) => {
+    if (!a.status) return;
+    for (const m of new Set([a.sm, a.tm])) tStats[m][a.status]++;
+    if (!a.cross) tStats[a.sm]["in" + a.status[0].toUpperCase() + a.status.slice(1)]++;
+  });
 
   // ---------------------------------------------------------------- right panel
   const detail = $("detail");
@@ -499,7 +442,7 @@
   //   gene = dot, link = line (regulator -> target), territory = gene group,
   //   road = bundle of links between territories, importance = eigenvector
   //   centrality, "in both" / "new in RIF" / "missing in RIF" = edge status.
-  const STATUS_TEXT = () => TXT().status;
+  const STATUS_TEXT = { retained: "In both", gained: "New in RIF", lost: "Missing in RIF" };
   const signed = (v, d = 2) => (v == null ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d));
 
   function geneListItems(list, right, title) {
@@ -524,7 +467,7 @@
       <div class="detail-section">
       <h2><span class="badge">A</span>Territories</h2>
       <p class="hint">Gene groups, named after their hub · click to zoom</p>
-      <div class="t-head"><span></span><span>Hub gene · size</span><span>Links <span class="up">new</span> / <span class="down">missing</span> ${state.view === "rif" ? "in RIF" : "here"}</span></div>
+      <div class="t-head"><span></span><span>Hub gene · size</span><span>Links <span class="up">new</span> / <span class="down">missing</span> in RIF</span></div>
       <ul class="territories">
         ${T.map((t, i) => `
           <li data-t="${i}" class="${state.territory === i ? "on" : ""}" title="Zoom into the ${esc(t.hub)} territory">
@@ -551,9 +494,9 @@
   function edgeRows(list) {
     const shown = list.slice(0, 25);
     if (!list.length) return `<p class="more">None with the current settings.</p>`;
-    return `<div class="list-head"><span></span><span title="${esc(TXT().edgeColTitle)}">${esc(TXT().edgeColHead)}</span></div>
+    return `<div class="list-head"><span></span><span title="Model estimate of link strength in the fertile and RIF networks">fertile → RIF</span></div>
       <ul class="edge-list">${shown.map((x) => `
-        <li data-gene="${esc(x.other)}" title="${esc(STATUS_TEXT()[x.status])}. Click to show ${esc(x.other)}.">
+        <li data-gene="${esc(x.other)}" title="${esc(STATUS_TEXT[x.status])}. Click to show ${esc(x.other)}.">
           <span class="st ${x.status}"></span>
           <span>${esc(x.other)}${litBadge(x.lit)}</span>
           <span class="cf">${signed(x.cF)} → ${signed(x.cR)}</span>
@@ -668,7 +611,7 @@
       n.curated ? `<span class="tag" title="Shown in the published static figure">In paper figure</span>` : "",
       n.candidate ? `<span class="tag cand" title="Central in this map but little implantation research">Novel candidate</span>` : "",
     ].join("");
-    const legend = `<div class="mini-legend"><span><i style="background:var(--retained)"></i>${esc(TXT().legendRetained.toLowerCase())}</span><span><i style="background:var(--gained)"></i>${esc(TXT().legendGained.toLowerCase())}</span><span><i style="background:var(--lost)"></i>${esc(TXT().legendLost.toLowerCase())}</span><span title="Link strength = model estimate: + switches the target on, − switches it off, — no link">+ on · − off</span></div>`;
+    const legend = `<div class="mini-legend"><span><i style="background:var(--retained)"></i>in both</span><span><i style="background:var(--gained)"></i>new in RIF</span><span><i style="background:var(--lost)"></i>missing in RIF</span><span title="Link strength = model estimate: + switches the target on, − switches it off, — no link">+ on · − off</span></div>`;
     return `
       <button class="back" data-back>← Back to overview</button>
       <div class="gene-head"><h3>${esc(id)}</h3><span class="role-pill ${n.tf ? "tf" : ""}" title="${n.tf ? "A transcription factor: can switch other genes on or off" : "Only regulated by other genes in this analysis"}">${n.tf ? "Regulator (TF)" : "Target gene"}</span></div>
@@ -677,7 +620,7 @@
       <h2><span class="badge">E</span>In this network</h2>
       <div class="tags">${tags}</div>
       <dl class="kv2">
-        <dt class="h"></dt><dd class="h">${esc(TXT().colA)}</dd><dd class="h">${esc(TXT().colB)}</dd><dd class="h">Change</dd>
+        <dt class="h"></dt><dd class="h">Fertile</dd><dd class="h">RIF</dd><dd class="h">Change</dd>
         <dt class="k" title="How central the gene is (eigenvector centrality, 0–1)">Importance</dt><dd class="v">${fmt(eF)}</dd><dd class="v">${fmt(eR)}</dd><dd class="v">${diff(eF, eR, 3)}</dd>
         <dt class="k" title="Number of links to other genes">Number of links</dt><dd class="v">${dF ?? "—"}</dd><dd class="v">${dR ?? "—"}</dd><dd class="v">${diff(dF, dR, 0)}</dd>
       </dl>
@@ -711,9 +654,9 @@
       <h2><span class="badge">A</span>Links</h2>
       <dl class="kv2" style="grid-template-columns: 1fr auto auto">
         <dt class="h"></dt><dd class="h" title="Both genes inside this territory">Inside</dd><dd class="h" title="At least one gene inside this territory">Touching</dd>
-        <dt class="k">${esc(TXT().legendRetained)}</dt><dd class="v">${s.inRetained}</dd><dd class="v">${s.retained}</dd>
-        <dt class="k up">${esc(TXT().legendGained)}</dt><dd class="v">${s.inGained}</dd><dd class="v">${s.gained}</dd>
-        <dt class="k down">${esc(TXT().legendLost)}</dt><dd class="v">${s.inLost}</dd><dd class="v">${s.lost}</dd>
+        <dt class="k">In both</dt><dd class="v">${s.inRetained}</dd><dd class="v">${s.retained}</dd>
+        <dt class="k up">New in RIF</dt><dd class="v">${s.inGained}</dd><dd class="v">${s.gained}</dd>
+        <dt class="k down">Missing in RIF</dt><dd class="v">${s.inLost}</dd><dd class="v">${s.lost}</dd>
       </dl>
       </div>
       <div class="detail-section">
@@ -728,9 +671,9 @@
       </div>
       <div class="detail-section">
         <h2><span class="badge">C</span>Genes whose importance changes most</h2>
-        <div class="list-head"><span></span><span title="Blue = more important ${state.view === "rif" ? "in RIF" : "now"}, red = less">${esc(TXT().colB)} − ${esc(TXT().colA)}</span></div>
+        <div class="list-head"><span></span><span title="Blue = more important in RIF, red = less">RIF − fertile</span></div>
         <ul class="edge-list">${genes.map((g) => `
-          <li data-gene="${esc(g.id)}" title="${g.d >= 0 ? "More" : "Less"} important ${state.view === "rif" ? "in RIF" : "now"}">
+          <li data-gene="${esc(g.id)}" title="${g.d >= 0 ? "More" : "Less"} important in RIF">
             <span class="st ${g.d >= 0 ? "gained" : "lost"}"></span>
             <span>${esc(g.id)}</span>
             <span class="cf">${signed(g.d, 3)}</span>
@@ -778,12 +721,22 @@
       <h2><span class="badge">7</span>Currently shown</h2>
       <div><span>Genes</span><b>${genes.toLocaleString()}</b></div>
       <div><span>Links in both</span><b>${cnt.retained.toLocaleString()}</b></div>
-      <div><span class="up">${esc(TXT().legendGained)}</span><b>${cnt.gained.toLocaleString()}</b></div>
-      <div><span class="down">${esc(TXT().legendLost)}</span><b>${cnt.lost.toLocaleString()}</b></div>
+      <div><span class="up">New in RIF</span><b>${cnt.gained.toLocaleString()}</b></div>
+      <div><span class="down">Missing in RIF</span><b>${cnt.lost.toLocaleString()}</b></div>
       <div><span>Between territories</span><b>${cross.toLocaleString()}</b></div>
       <div><span>Known links</span><b>${lit.toLocaleString()}</b></div>`;
   }
 
+  const MODE_HINT = {
+    both: "Line colour = change in RIF",
+    fertile: "Red = missing in RIF",
+    rif: "Blue = new in RIF",
+  };
+  const SIZE_HINT = {
+    fertile: "Bigger = more central in fertile",
+    rif: "Bigger = more central in RIF",
+    delta: "Bigger = bigger change",
+  };
   const COLOR_HINT = {
     territory: "One colour per territory",
     tf: "Purple regulator · orange target",
@@ -804,7 +757,6 @@
     computeLitNodes();
     computeFocus();
     computeHighways();
-    computeTStats();
     renderer.refresh();
     // Repaint the selection ring now as well: a frame already queued by a
     // camera animation can absorb this refresh and render before the state
@@ -812,8 +764,8 @@
     drawSelection();
     renderStats();
     renderDetail();
-    $("mode-hint").textContent = TXT().modeHint[state.mode];
-    $("size-hint").textContent = TXT().sizeHint[state.sizeBy];
+    $("mode-hint").textContent = MODE_HINT[state.mode];
+    $("size-hint").textContent = SIZE_HINT[state.sizeBy];
     $("color-hint").textContent = COLOR_HINT[state.colorBy];
     $("lit-hint").textContent = LIT_HINT[state.lit];
     $("legend-dots").innerHTML = DOT_LEGEND[state.colorBy]();
@@ -909,112 +861,6 @@
   for (const [id, key] of [["only-changed", "onlyChanged"], ["show-highways", "highways"], ["show-cross", "cross"]]) {
     $(id).addEventListener("change", (ev) => { state[key] = ev.target.checked; update(); });
   }
-
-  // ---------------------------------------------------------------- views (Fertile vs RIF · Across the cycle)
-  function applyViewLabels() {
-    const t = TXT();
-    $("compartment-label").textContent = (COMPARTMENT[0].toUpperCase() + COMPARTMENT.slice(1))
-      + (state.view === "woi" ? ` · ${TP_LABEL[state.tp]}` : "");
-    document.querySelectorAll("#mode [data-lbl='fertile']").forEach((el) => (el.textContent = t.modeFertile));
-    document.querySelectorAll("#mode [data-lbl='rif']").forEach((el) => (el.textContent = t.modeRif));
-    document.querySelectorAll("#sizeby [data-lbl='fertile']").forEach((el) => (el.textContent = t.sizeFertile));
-    document.querySelectorAll("#sizeby [data-lbl='rif']").forEach((el) => (el.textContent = t.sizeRif));
-    $("only-changed-label").textContent = t.onlyChanged;
-    $("lg-retained").textContent = t.legendRetained;
-    $("lg-gained").textContent = t.legendGained;
-    $("lg-lost").textContent = t.legendLost;
-    $("lg-absent").textContent = t.legendAbsent;
-    const kicker = document.querySelector(".guide-kicker");
-    if (kicker) kicker.textContent = t.kicker;
-  }
-
-  function setView(view) {
-    state.view = view;
-    document.querySelectorAll(".view-tab").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
-    $("woi-scrubber-section").hidden = view !== "woi";
-    syncPair();
-    applyViewLabels();
-    update();
-  }
-  document.querySelectorAll(".view-tab").forEach((b) => b.addEventListener("click", () => { if (b.dataset.view !== state.view) setView(b.dataset.view); }));
-
-  const tpSlider = $("tp-slider");
-  tpSlider.addEventListener("input", () => {
-    state.tp = +tpSlider.value;
-    syncPair();
-    applyViewLabels();
-    update();
-  });
-  let tpTimer = null;
-  $("tp-play").addEventListener("click", () => {
-    const btn = $("tp-play");
-    if (tpTimer) {
-      clearInterval(tpTimer); tpTimer = null; btn.textContent = "▶"; btn.setAttribute("aria-label", "Play");
-      return;
-    }
-    btn.textContent = "❚❚"; btn.setAttribute("aria-label", "Pause");
-    tpTimer = setInterval(() => {
-      state.tp = (state.tp + 1) % TP.length;
-      tpSlider.value = state.tp;
-      syncPair(); applyViewLabels(); update();
-    }, 1400);
-  });
-  applyViewLabels();
-
-  // ---------------------------------------------------------------- panel toggles (mobile drawers / desktop collapse)
-  const panelEls = { left: $("panel-left"), right: $("panel-right") };
-  const toggleBtns = { left: $("toggle-left"), right: $("toggle-right") };
-  const backdrop = $("panel-backdrop");
-  const desktopMQ = window.matchMedia("(min-width: 1101px)");
-
-  function panelIsOpen(side) { return !panelEls[side].classList.contains("panel-closed"); }
-  function refreshBackdrop() {
-    const anyOpenDrawer = !desktopMQ.matches && (panelIsOpen("left") || panelIsOpen("right"));
-    backdrop.classList.toggle("show", anyOpenDrawer);
-  }
-  function setPanelOpen(side, open) {
-    panelEls[side].classList.toggle("panel-closed", !open);
-    toggleBtns[side].setAttribute("aria-expanded", String(open));
-    const resizer = document.querySelector(`.resizer[data-side="${side}"]`);
-    if (resizer) resizer.style.display = (desktopMQ.matches && !open) ? "none" : "";
-    if (desktopMQ.matches) {
-      // On desktop a "closed" panel collapses its grid track to 0 so the map
-      // reclaims the space; its previous width is remembered and restored.
-      const layout = document.querySelector(".layout");
-      const varName = side === "left" ? "--lw" : "--rw";
-      if (!open) {
-        panelEls[side].dataset.savedWidth = getComputedStyle(layout).getPropertyValue(varName).trim() || "350px";
-        layout.style.setProperty(varName, "0px");
-      } else {
-        layout.style.setProperty(varName, panelEls[side].dataset.savedWidth || "350px");
-      }
-    }
-    refreshBackdrop();
-  }
-  function initPanelDefaults() {
-    // Desktop: both panels start open. Compact (tablet/phone): both start closed
-    // so visitors land on the full map, not a stack of controls.
-    const openByDefault = desktopMQ.matches;
-    setPanelOpen("left", openByDefault);
-    setPanelOpen("right", openByDefault);
-  }
-  toggleBtns.left.addEventListener("click", () => {
-    if (!desktopMQ.matches) setPanelOpen("right", false); // only one drawer at a time on compact layouts
-    setPanelOpen("left", !panelIsOpen("left"));
-  });
-  toggleBtns.right.addEventListener("click", () => {
-    if (!desktopMQ.matches) setPanelOpen("left", false);
-    setPanelOpen("right", !panelIsOpen("right"));
-  });
-  backdrop.addEventListener("click", () => { setPanelOpen("left", false); setPanelOpen("right", false); });
-  document.querySelectorAll("[data-close]").forEach((b) => {
-    b.addEventListener("click", () => setPanelOpen(b.dataset.close, false));
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !help.open && !desktopMQ.matches) { setPanelOpen("left", false); setPanelOpen("right", false); }
-  });
-  desktopMQ.addEventListener("change", initPanelDefaults);
-  initPanelDefaults();
 
   $("zoom-in").onclick = () => camera.animatedZoom({ duration: 250 });
   $("zoom-out").onclick = () => camera.animatedUnzoom({ duration: 250 });

@@ -3,9 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Receptivity Atlas · Hickey Lab, Duke University</title>
-  <meta name="description" content="Receptivity Atlas: an interactive gene-regulatory-network explorer for the human endometrium, from the Hickey Lab, Department of Biomedical Engineering, Duke University.">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23111114'/%3E%3Ccircle cx='16' cy='16' r='12.5' fill='none' stroke='%23c792ea' stroke-width='1.3' stroke-dasharray='2 3'/%3E%3Cline x1='16' y1='16' x2='9' y2='11' stroke='%238a8a95' stroke-width='1.2'/%3E%3Cline x1='16' y1='16' x2='23' y2='12' stroke='%238a8a95' stroke-width='1.2'/%3E%3Cline x1='16' y1='16' x2='14' y2='23' stroke='%238a8a95' stroke-width='1.2'/%3E%3Ccircle cx='9' cy='11' r='2.6' fill='%235aa0ff'/%3E%3Ccircle cx='23' cy='12' r='2.3' fill='%23ffa07a'/%3E%3Ccircle cx='14' cy='23' r='2.3' fill='%238f7ff0'/%3E%3Ccircle cx='16' cy='16' r='3.4' fill='%23c792ea'/%3E%3C/svg%3E">
+  <title>Endometrial GRN Explorer · demo_v1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -13,62 +11,32 @@
 </head>
 <body>
   <header class="topbar">
-    <button class="panel-toggle" id="toggle-left" aria-label="Show controls panel" title="Show/hide controls" aria-expanded="true" aria-controls="panel-left"><span class="ic">☰</span><span class="lbl">Controls</span></button>
     <div class="brand">
-      <svg class="project-mark" viewBox="0 0 32 32" role="img" aria-label="Receptivity Atlas logo">
-        <circle cx="16" cy="16" r="12.5" fill="none" stroke="var(--accent)" stroke-width="1.3" stroke-dasharray="2 3"/>
-        <line x1="16" y1="16" x2="9" y2="11" stroke="#8a8a95" stroke-width="1.2"/>
-        <line x1="16" y1="16" x2="23" y2="12" stroke="#8a8a95" stroke-width="1.2"/>
-        <line x1="16" y1="16" x2="14" y2="23" stroke="#8a8a95" stroke-width="1.2"/>
-        <circle cx="9" cy="11" r="2.6" fill="var(--gained)"/>
-        <circle cx="23" cy="12" r="2.3" fill="var(--target)"/>
-        <circle cx="14" cy="23" r="2.3" fill="var(--tf)"/>
-        <circle cx="16" cy="16" r="3.4" fill="var(--accent)"/>
-      </svg>
+      <span class="brand-dot"></span>
       <div>
-        <h1>Receptivity Atlas <span class="version-pill" title="Demo release, version 1: for review, not for citation">demo_v1</span></h1>
+        <h1>Endometrial GRN Explorer <span class="version-pill" title="Demo release, version 1: for review, not for citation">demo_v1</span></h1>
         <p class="sub"><span id="compartment-label">Stromal</span> cells · gene regulatory network</p>
       </div>
     </div>
-    <div class="affiliation" title="A project of the Hickey Lab, Department of Biomedical Engineering, Duke University">
-      <span class="affil-divider" aria-hidden="true"></span>
-      <img src="assets/hickey-lab-logo.png" alt="Hickey Lab" class="lab-logo">
-      <span class="affil-text">Duke University</span>
-    </div>
     <nav class="views" aria-label="View">
       <button class="view-tab active" data-view="rif" title="Healthy (fertile) vs recurrent implantation failure, both at LH+7 (the window of implantation)">Fertile vs RIF · LH+7</button>
-      <button class="view-tab" data-view="woi" title="How the network changes across the fertile cycle, LH+3 to LH+11">Across the cycle</button>
+      <button class="view-tab" data-view="woi" disabled title="Coming next: how the network changes across the cycle">Across the cycle <em>soon</em></button>
     </nav>
     <button class="help-btn" id="help-open" aria-haspopup="dialog"><span class="badge">?</span>Reading guide</button>
-    <button class="panel-toggle" id="toggle-right" aria-label="Show details panel" title="Show/hide gene details" aria-expanded="true" aria-controls="panel-right"><span class="lbl">Details</span><span class="ic">▤</span></button>
     <div class="search">
       <input id="search" type="search" list="gene-list" placeholder="Find a gene, e.g. HAND2" autocomplete="off" spellcheck="false" aria-label="Find a gene">
       <datalist id="gene-list"></datalist>
     </div>
   </header>
 
-  <div class="panel-backdrop" id="panel-backdrop"></div>
-
   <main class="layout">
-    <aside class="panel left" id="panel-left" aria-label="Controls">
-      <button class="panel-close" data-close="left">✕ Close</button>
-      <section id="woi-scrubber-section" hidden>
-        <h2><span class="badge">0</span>Timepoint</h2>
-        <div class="scrubber">
-          <button class="play-btn" id="tp-play" title="Play through the cycle" aria-label="Play">▶</button>
-          <div class="scrubber-track">
-            <input type="range" id="tp-slider" min="0" max="4" step="1" value="2" aria-label="Timepoint, LH+3 to LH+11">
-            <div class="tp-labels"><span>LH+3</span><span>LH+5</span><span>LH+7</span><span>LH+9</span><span>LH+11</span></div>
-          </div>
-        </div>
-        <p class="hint">Comparing each timepoint to the one before it · LH+3 shown alone (no earlier timepoint to compare)</p>
-      </section>
+    <aside class="panel left" aria-label="Controls">
       <section>
-        <h2><span class="badge">1</span><span id="mode-title">Show links from</span></h2>
+        <h2><span class="badge">1</span>Show links from</h2>
         <div class="seg" id="mode" role="radiogroup" aria-label="Show links from">
           <button data-v="both" class="on" title="Overlay both networks and colour what changed">Both</button>
-          <button data-v="fertile" title="Only the healthy (fertile) network at LH+7"><span data-lbl="fertile">Fertile only</span></button>
-          <button data-v="rif" title="Only the RIF network at LH+7"><span data-lbl="rif">RIF only</span></button>
+          <button data-v="fertile" title="Only the healthy (fertile) network at LH+7">Fertile only</button>
+          <button data-v="rif" title="Only the RIF network at LH+7">RIF only</button>
         </div>
         <p class="hint" id="mode-hint"></p>
       </section>
@@ -76,8 +44,8 @@
       <section>
         <h2><span class="badge">2</span>Dot size shows</h2>
         <div class="seg" id="sizeby" role="radiogroup" aria-label="Dot size shows">
-          <button data-v="fertile" class="on" title="How important the gene is in the fertile network"><span data-lbl="fertile">Fertile</span></button>
-          <button data-v="rif" title="How important the gene is in the RIF network"><span data-lbl="rif">RIF</span></button>
+          <button data-v="fertile" class="on" title="How important the gene is in the fertile network">Fertile</button>
+          <button data-v="rif" title="How important the gene is in the RIF network">RIF</button>
           <button data-v="delta" title="How much the gene's importance differs between fertile and RIF">Change</button>
         </div>
         <p class="hint" id="size-hint"></p>
@@ -105,7 +73,7 @@
 
       <section class="checks">
         <h2><span class="badge">5</span>Display</h2>
-        <label><input type="checkbox" id="only-changed"> <span id="only-changed-label">Only links that change in RIF</span></label>
+        <label><input type="checkbox" id="only-changed"> Only links that change in RIF</label>
         <label><input type="checkbox" id="show-highways" checked> Roads between territories</label>
         <label><input type="checkbox" id="show-cross"> All links between territories <span class="muted">(busy)</span></label>
       </section>
@@ -113,14 +81,14 @@
       <section class="legend-block">
         <h2><span class="badge">6</span>Legend</h2>
         <ul class="legend">
-          <li><span class="sw line retained"></span><span id="lg-retained">In both</span></li>
-          <li><span class="sw line gained"></span><span id="lg-gained">New in RIF</span></li>
-          <li><span class="sw line lost"></span><span id="lg-lost">Missing in RIF</span></li>
+          <li><span class="sw line retained"></span>In both</li>
+          <li><span class="sw line gained"></span>New in RIF</li>
+          <li><span class="sw line lost"></span>Missing in RIF</li>
           <li><span class="sw road"></span>Road = links between territories</li>
         </ul>
         <ul class="legend" id="legend-dots"></ul>
         <ul class="legend">
-          <li><span class="sw dot absent"></span><span id="lg-absent">Not in LH+7 networks</span></li>
+          <li><span class="sw dot absent"></span>Not in LH+7 networks</li>
         </ul>
         <p class="hint">Thicker line = stronger link · bigger dot = more important gene</p>
       </section>
@@ -142,8 +110,7 @@
     </div>
 
     <div class="resizer" data-side="right" role="separator" aria-orientation="vertical" aria-label="Resize right panel" tabindex="0" title="Drag to resize · double-click to reset"></div>
-    <aside class="panel right" id="panel-right" aria-label="Details">
-      <button class="panel-close" data-close="right">✕ Close</button>
+    <aside class="panel right" aria-label="Details">
       <div id="detail"></div>
     </aside>
   </main>
@@ -171,7 +138,7 @@
           <span class="badge">3</span>
           <svg viewBox="0 0 64 40" aria-hidden="true"><line x1="8" y1="10" x2="56" y2="10" class="g-both"/><line x1="8" y1="20" x2="56" y2="20" class="g-new"/><line x1="8" y1="30" x2="56" y2="30" class="g-lost"/></svg>
           <h3>Line colours</h3>
-          <p><span class="k-both">Grey</span> both · <span class="up">blue</span> new · <span class="down">red</span> missing</p>
+          <p><span class="k-both">Grey</span> both · <span class="up">blue</span> new in RIF · <span class="down">red</span> missing in RIF</p>
         </li>
         <li class="gcard">
           <span class="badge">4</span>
@@ -212,7 +179,6 @@
         </details>
       </div>
       <button class="help-done" id="help-done">Start exploring →</button>
-      <p class="help-affil">Receptivity Atlas is a project of the <a href="https://bme.duke.edu/faculty/john-hickey" target="_blank" rel="noopener">Hickey Lab</a>, Department of Biomedical Engineering, Duke University.</p>
     </div>
   </dialog>
 

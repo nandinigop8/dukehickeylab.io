@@ -40,14 +40,12 @@ button, input { font: inherit; color: inherit; }
 .topbar {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px 24px;
+  gap: 24px;
   padding: 10px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--panel);
 }
 .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.project-mark { width: 30px; height: 30px; flex: none; }
 .brand-dot {
   width: 12px; height: 12px; border-radius: 50%;
   background: var(--accent);
@@ -60,9 +58,6 @@ button, input { font: inherit; color: inherit; }
   font: 600 10px var(--mono); letter-spacing: .02em; color: var(--accent); border: 1px solid var(--accent);
 }
 .brand .sub { margin: 0; font-size: 12px; color: var(--text-2); }
-.affiliation { display: flex; align-items: center; gap: 10px; flex: none; }
-.affil-divider { width: 1px; height: 26px; background: var(--border); flex: none; }
-.affil-text { font-size: 11.5px; color: var(--text-2); white-space: nowrap; }
 .views { display: flex; gap: 4px; }
 .view-tab {
   background: none; border: 1px solid transparent; border-radius: 8px;
@@ -135,17 +130,6 @@ body.resizing { cursor: col-resize; user-select: none; }
 
 .checks label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); padding: 3px 0; cursor: pointer; }
 .checks input { accent-color: var(--accent); }
-
-/* ---------- across-the-cycle scrubber ---------- */
-.scrubber { display: flex; align-items: center; gap: 10px; }
-.play-btn {
-  flex: none; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border);
-  background: var(--panel-2); color: var(--text); cursor: pointer; display: grid; place-items: center; font-size: 12px;
-}
-.play-btn:hover { border-color: #4a4a55; }
-.scrubber-track { flex: 1; min-width: 0; }
-.scrubber-track input[type="range"] { width: 100%; accent-color: var(--accent); }
-.tp-labels { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); margin-top: 2px; }
 
 .legend { list-style: none; padding: 0; margin: 0; font-size: 12.5px; color: var(--text-2); }
 .legend li { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
@@ -342,8 +326,6 @@ dialog#help::backdrop { background: rgba(8,8,12,.65); backdrop-filter: blur(3px)
   margin-top: 16px; background: var(--accent); color: #16161b; border: 0; border-radius: 999px;
   padding: 9px 20px; font-weight: 600; cursor: pointer; float: right;
 }
-.help-affil { clear: both; margin: 22px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted); }
-.help-affil a { color: var(--text-2); }
 .help-btn { display: inline-flex; align-items: center; gap: 7px; }
 
 /* detail panel */
@@ -389,52 +371,22 @@ button.g-more { font-size: 12.5px; }
 @media (max-width: 900px) {
   .guide { grid-template-columns: repeat(3, 1fr); }
 }
-@media (max-width: 560px) {
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: var(--lw, 350px) 6px minmax(0, 1fr); }
+  .panel.right, .resizer[data-side="right"] { display: none; }
+}
+@media (max-width: 720px) {
+  .resizer { display: none; }
+  .help-btn { order: 3; }
+  .stage-tip { display: none; }
   .guide { grid-template-columns: 1fr 1fr; }
   .guide-more { grid-template-columns: 1fr; }
-  .search { width: 100%; }
+  body { overflow: auto; }
+  .topbar { flex-wrap: wrap; gap: 10px; }
+  .search { margin-left: 0; width: 100%; }
   .search input { width: 100%; }
-  .stage-tip { display: none; }
-  .affil-divider, .affil-text { display: none; }
+  .layout { display: flex; flex-direction: column; }
+  .stage-wrap { height: 70vh; order: -1; }
+  .panel.left { border-right: 0; border-top: 1px solid var(--border); }
+  .panel.right { display: block; border-left: 0; border-top: 1px solid var(--border); }
 }
-
-/* ---------- panel toggles (all screen sizes) ---------- */
-.panel-toggle {
-  display: inline-flex; align-items: center; gap: 6px; flex: none;
-  background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
-  padding: 6px 11px; color: var(--text); font-size: 13px; cursor: pointer; white-space: nowrap;
-}
-.panel-toggle:hover { border-color: #4a4a55; }
-.panel-toggle:focus-visible { outline: 2px solid var(--accent); }
-.panel-toggle .ic { font-size: 14px; line-height: 1; }
-.panel-close {
-  display: none; margin: 0 0 10px; background: var(--panel-2); border: 1px solid var(--border);
-  border-radius: 8px; color: var(--text); font-size: 13px; padding: 7px 12px; cursor: pointer;
-  align-items: center; gap: 6px;
-}
-.panel-backdrop {
-  display: none; position: fixed; inset: 0; background: rgba(6,6,9,.55); z-index: 39;
-}
-.panel-backdrop.show { display: block; }
-
-/* ---------- compact layout (tablet + phone): drawer panels over a full-bleed map ---------- */
-@media (max-width: 1100px) {
-  .resizer { display: none; }
-  .layout { display: block; position: relative; height: 100%; }
-  .stage-wrap { position: absolute; inset: 0; height: auto; }
-  .panel.left, .panel.right {
-    position: fixed; top: 0; bottom: 0; width: min(88vw, 360px); z-index: 45;
-    box-shadow: 0 0 40px rgba(0,0,0,.5); transition: transform .25s ease;
-  }
-  .panel.left { left: 0; border-right: 1px solid var(--border); transform: translateX(-100%); }
-  .panel.right { right: 0; border-left: 1px solid var(--border); transform: translateX(100%); }
-  .panel.left:not(.panel-closed) { transform: translateX(0); }
-  .panel.right:not(.panel-closed) { transform: translateX(0); }
-  .panel-close { display: flex; }
-}
-@media (min-width: 1101px) {
-  /* On desktop the same toggle buttons collapse a panel's grid track to 0
-     instead of drawer-sliding it -- see setPanelClosed() in app.js. */
-  .panel.panel-closed { display: none; }
-}
-
