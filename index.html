@@ -3,7 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Endometrial GRN Explorer · demo_v1</title>
+  <title>ASTRAEA · Endometrial Receptivity GRN Atlas</title>
+  <meta name="description" content="ASTRAEA: an interactive atlas of the gene regulatory network of the human endometrium across the cycle and in recurrent implantation failure. Hickey Lab, Duke University.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23111114'/%3E%3Cpath d='M16 5 L18.2 13.2 L26 16 L18.2 18.8 L16 27 L13.8 18.8 L6 16 L13.8 13.2 Z' fill='%23c792ea'/%3E%3Ccircle cx='24.5' cy='8' r='1.6' fill='%235aa0ff'/%3E%3Ccircle cx='7' cy='24' r='1.3' fill='%23ffa07a'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -12,10 +14,14 @@
 <body>
   <header class="topbar">
     <div class="brand">
-      <span class="brand-dot"></span>
+      <svg class="brand-star" viewBox="0 0 32 32" role="img" aria-label="ASTRAEA">
+        <path d="M16 4 L18.4 13 L27 16 L18.4 19 L16 28 L13.6 19 L5 16 L13.6 13 Z" fill="var(--accent)"/>
+        <circle cx="25" cy="7.5" r="1.7" fill="var(--gained)"/>
+        <circle cx="6.5" cy="24.5" r="1.4" fill="var(--target)"/>
+      </svg>
       <div>
-        <h1>Endometrial GRN Explorer <span class="version-pill" title="Demo release, version 1: for review, not for citation">demo_v1</span></h1>
-        <p class="sub"><span id="compartment-label">Stromal</span> cells · gene regulatory network</p>
+        <h1>ASTRAEA <span class="version-pill" title="Demo release, version 1: for review, not for citation">demo_v1</span></h1>
+        <p class="sub" title="Atlas of Single-cell Transcriptional Regulators And Elements of Attachment">Endometrial receptivity GRN atlas · <span id="compartment-label">Stromal</span> cells · Hickey Lab, Duke</p>
       </div>
     </div>
     <nav class="views" aria-label="View">
@@ -118,7 +124,7 @@
   <dialog id="help" aria-labelledby="help-title">
     <div class="help-body">
       <button class="help-close" id="help-close" aria-label="Close">×</button>
-      <p class="guide-kicker">Stromal cells · Fertile vs RIF · LH+7</p>
+      <p class="guide-kicker">ASTRAEA · Stromal cells · Fertile vs RIF · LH+7</p>
       <h2 id="help-title">Reading Guide in 5 Steps</h2>
 
       <ol class="guide">
