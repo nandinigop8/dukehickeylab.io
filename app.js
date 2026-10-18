@@ -918,7 +918,7 @@
   search.addEventListener("change", runSearch);
   search.addEventListener("keydown", (e) => { if (e.key === "Enter") runSearch(); });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !help.open) { state.selected = null; state.territory = null; update(); }
+    if (e.key === "Escape" && !help.open && !about.open) { state.selected = null; state.territory = null; update(); }
     if (e.key === "/" && document.activeElement !== search) { e.preventDefault(); search.focus(); }
   });
 
@@ -1012,6 +1012,7 @@
 
   // ---------------------------------------------------------------- help
   const help = $("help");
+  const about = $("about");
   const openHelp = (section) => {
     if (typeof help.showModal === "function") help.showModal(); else help.setAttribute("open", "");
     const sec = section && $("help-" + section);
@@ -1027,6 +1028,17 @@
   help.addEventListener("cancel", () => { try { localStorage.setItem("grn-help-seen", "1"); } catch (e) { /* ignore */ } });
   help.addEventListener("click", (e) => { if (e.target === help) closeHelp(); });  // click on backdrop
   document.querySelectorAll("[data-help]").forEach((b) => { b.onclick = () => openHelp(b.dataset.help); });
+  // About: data source (Cao et al.), team, lab affiliation.
+  const openAbout = (id) => {
+    if (typeof about.showModal === "function") about.showModal(); else about.setAttribute("open", "");
+    if (id && $(id)) $(id).scrollIntoView({ block: "start" });
+  };
+  const closeAbout = () => { if (typeof about.close === "function") about.close(); else about.removeAttribute("open"); };
+  $("about-open").onclick = () => openAbout();
+  $("about-source").onclick = () => openAbout("about-data");
+  $("guide-about").onclick = () => { closeHelp(); openAbout(); };
+  $("about-close").onclick = closeAbout;
+  about.addEventListener("click", (e) => { if (e.target === about) closeAbout(); });
   let seen = false;
   try { seen = localStorage.getItem("grn-help-seen") === "1"; } catch (e) { /* ignore */ }
   if (!seen) openHelp();

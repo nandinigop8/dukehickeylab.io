@@ -21,6 +21,7 @@
       <button class="view-tab" data-view="woi" disabled title="Coming next: how the network changes across the cycle">Across the cycle <em>soon</em></button>
     </nav>
     <button class="help-btn" id="help-open" aria-haspopup="dialog">Reading Guide <span class="badge">?</span></button>
+    <button class="help-btn" id="about-open" aria-haspopup="dialog">About</button>
     <div class="panel-toggles">
       <button class="pt" id="toggle-left" aria-expanded="true" aria-controls="panel-left">Hide Controls</button>
       <button class="pt" id="toggle-right" aria-expanded="true" aria-controls="panel-right">Hide Details</button>
@@ -108,7 +109,7 @@
         <button id="zoom-reset" aria-label="Show whole map" title="Show whole map">⤢</button>
       </div>
       <p class="stage-tip" id="stage-tip">Hover a gene · click to read · click a territory to zoom</p>
-      <p class="caveat">Links are predictions, not proven cause and effect · <button class="linklike" data-help="limits">Limits of this map</button></p>
+      <p class="caveat">Links are predictions, not proven cause and effect · <button class="linklike" data-help="limits">Limits of this map</button> · <button class="linklike" id="about-source">Data: Cao et al. 2025</button></p>
     </div>
 
     <div class="resizer" data-side="right" role="separator" aria-orientation="vertical" aria-label="Resize right panel" tabindex="0" title="Drag to resize · double-click to reset"></div>
@@ -116,6 +117,36 @@
       <div id="detail"></div>
     </aside>
   </main>
+
+  <dialog id="about" aria-labelledby="about-title">
+    <div class="help-body">
+      <button class="help-close" id="about-close" aria-label="Close">×</button>
+      <p class="guide-kicker">ASTRAEA · About</p>
+      <h2 id="about-title">Data source &amp; team</h2>
+
+      <section class="about-sec" id="about-data">
+        <h3>Where the data comes from</h3>
+        <p>The networks shown here are computational predictions built from the single-cell RNA-seq dataset published in:</p>
+        <p class="cite">Cao, D., Liu, Y., Cheng, Y. et al. Time-series single-cell transcriptomic profiling of luteal-phase endometrium uncovers dynamic characteristics and its dysregulation in recurrent implantation failures. <em>Nat Commun</em> <strong>16</strong>, 137 (2025). <a href="https://doi.org/10.1038/s41467-024-55419-z" target="_blank" rel="noopener">https://doi.org/10.1038/s41467-024-55419-z</a></p>
+        <p class="note">Please cite Cao et al. when referring to the underlying data. Links on the map are model predictions, not proven cause and effect.</p>
+      </section>
+
+      <section class="about-sec">
+        <h3>Team</h3>
+        <ul class="team">
+          <li><img src="assets/team/auggie.jpg" alt="Auggie Poysungnoen" loading="lazy"><b>Auggie Poysungnoen</b><span>Econ/Bio Undergraduate · '27</span><a href="https://www.linkedin.com/in/koravit-poysungnoen/" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><img src="assets/team/kevin.jpg" alt="Kevin Nguyen" loading="lazy"><b>Kevin Nguyen</b><span>BME · '29</span><a href="https://www.linkedin.com/in/kevin-nguyen-bme/" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><img src="assets/team/anna.jpg" alt="Anna Zou" loading="lazy"><b>Anna Zou</b><span>BME/ECE · '29</span><a href="https://www.linkedin.com/in/anna-zou-bme-ece/" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><img src="assets/team/nandini.jpg" alt="Nandini Gopalakrishnan" loading="lazy"><b>Nandini Gopalakrishnan</b><span>BME · '29</span><a href="https://www.linkedin.com/in/nandinigopalakrishnan1/" target="_blank" rel="noopener">LinkedIn</a></li>
+        </ul>
+      </section>
+
+      <div class="about-affil">
+        <a href="https://bme.duke.edu/faculty/john-hickey" target="_blank" rel="noopener" class="affil-logo"><img src="assets/hickey-lab-logo.png" alt="Hickey Lab"></a>
+        <p>ASTRAEA is a project of the Hickey Lab, Department of Biomedical Engineering, Duke University.</p>
+      </div>
+    </div>
+  </dialog>
 
   <dialog id="help" aria-labelledby="help-title">
     <div class="help-body">
@@ -182,6 +213,7 @@
         </section>
       </div>
       <button class="help-done" id="help-done">Start exploring →</button>
+      <p class="help-affil">A project of the Hickey Lab, Department of Biomedical Engineering, Duke University · <button class="linklike" id="guide-about">Data source &amp; team</button></p>
     </div>
   </dialog>
 
