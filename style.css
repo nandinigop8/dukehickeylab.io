@@ -311,12 +311,12 @@ details.summary p { margin: 6px 0 0; line-height: 1.5; }
 .linklike { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font-size: inherit; text-decoration: underline; }
 
 /* reading guide dialog */
-dialog#help, dialog#about {
+dialog#help, dialog#about, dialog#citation {
   width: min(860px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0;
   background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 16px;
   box-shadow: 0 30px 80px rgba(0,0,0,.55);
 }
-dialog#help::backdrop, dialog#about::backdrop { background: rgba(8,8,12,.65); backdrop-filter: blur(3px); }
+dialog#help::backdrop, dialog#about::backdrop, dialog#citation::backdrop { background: rgba(8,8,12,.65); backdrop-filter: blur(3px); }
 .help-body { padding: 24px 26px 22px; position: relative; overflow-y: auto; max-height: calc(100vh - 50px); }
 .guide-kicker { margin: 0 0 4px; font-size: var(--fs-xs); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
 .help-body h2 { font-size: var(--fs-xl); margin: 0 0 18px; letter-spacing: -.01em; }
@@ -443,7 +443,7 @@ button.g-more { font-size: var(--fs-md); }
 }
 
 /* about dialog: data source, team, affiliation */
-dialog#about { width: min(640px, calc(100vw - 32px)); }
+dialog#about, dialog#citation { width: min(640px, calc(100vw - 32px)); }
 .about-sec { margin: 0 0 20px; }
 .about-sec h3 { margin: 0 0 8px; font-size: var(--fs-lg); }
 .about-sec p { margin: 0 0 8px; font-size: var(--fs-md); color: var(--text-2); line-height: 1.55; }
@@ -463,3 +463,11 @@ dialog#about { width: min(640px, calc(100vw - 32px)); }
 .affil-logo img { height: 28px; width: auto; display: block; }
 .help-affil { clear: both; margin: 18px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: var(--fs-sm); color: var(--muted); }
 @media (max-width: 560px) { .team { grid-template-columns: 1fr 1fr; } .about-affil { flex-direction: column; align-items: flex-start; } }
+
+/* citation + about-us refinements */
+.team .role { color: var(--text); font-weight: 600; font-size: var(--fs-sm); margin: 1px 0 2px; }
+.copy-btn { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; color: var(--text); font-size: var(--fs-sm); cursor: pointer; margin: 0 0 10px; }
+.copy-btn:hover { border-color: #4a4a55; }
+.copy-btn:focus-visible { outline: 2px solid var(--accent); }
+.res-list { margin: 0; padding-left: 18px; font-size: var(--fs-md); color: var(--text-2); line-height: 1.7; }
+.res-list b { color: var(--text); font-weight: 600; }
