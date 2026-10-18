@@ -471,3 +471,10 @@ dialog#about, dialog#citation { width: min(640px, calc(100vw - 32px)); }
 .copy-btn:focus-visible { outline: 2px solid var(--accent); }
 .res-list { margin: 0; padding-left: 18px; font-size: var(--fs-md); color: var(--text-2); line-height: 1.7; }
 .res-list b { color: var(--text); font-weight: 600; }
+
+/* ---------- header: wrap instead of overflow (tablets, phones in landscape, narrow windows) ---------- */
+.topbar { flex-wrap: wrap; gap: 8px 14px; }
+.brand, .views { flex: none; }
+.view-tab, .help-btn, .pt { white-space: nowrap; }
+.search { flex: 0 1 auto; }
+@media (max-width: 1280px) { .search input { width: 200px; } }
