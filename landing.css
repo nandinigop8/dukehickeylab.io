@@ -17,13 +17,14 @@ body {
   color: var(--text);
   font: 15px/1.5 var(--font);
   display: grid;
+  grid-template-columns: minmax(0, 1fr);  /* never let a wide child stretch the page past the screen */
   place-items: center;
   padding: 32px 20px;
   overflow: hidden;
 }
 #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
-.hero { position: relative; z-index: 1; text-align: center; width: min(900px, 100%); }
+.hero { position: relative; z-index: 1; text-align: center; width: min(900px, 100%); min-width: 0; }
 .logo {
   margin: 0 0 2px;
   color: var(--brand);
@@ -88,7 +89,8 @@ body {
 .entries a.suggested { color: var(--text); border-color: rgba(208, 152, 142, 0.5); }
 
 @media (max-width: 560px) {
-  .logo { margin-bottom: 4px; }
+  /* fit the title on a phone: smaller type, and wrap rather than overflow if a font runs wide */
+  .logo { margin-bottom: 4px; font-size: clamp(20px, 7.2vw, 34px); letter-spacing: .08em; white-space: normal; overflow-wrap: anywhere; }
   .tagline { margin-bottom: 36px; }
   .entries { gap: 10px; }
   .entries a { width: 100px; padding: 16px 8px 13px; font-size: 11.5px; }

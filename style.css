@@ -474,7 +474,18 @@ dialog#about, dialog#citation { width: min(640px, calc(100vw - 32px)); }
 
 /* ---------- header: wrap instead of overflow (tablets, phones in landscape, narrow windows) ---------- */
 .topbar { flex-wrap: wrap; gap: 8px 14px; }
-.brand, .views { flex: none; }
+.brand { flex: none; }
+.views { flex: 0 1 auto; flex-wrap: wrap; max-width: 100%; }
 .view-tab, .help-btn, .pt { white-space: nowrap; }
 .search { flex: 0 1 auto; }
-@media (max-width: 1280px) { .search input { width: 200px; } }
+@media (min-width: 721px) and (max-width: 1280px) { .search input { width: 200px; } }
+/* phones: keep Reading Guide / Citation / About Us together on one row */
+@media (max-width: 560px) {
+  .topbar { gap: 8px 8px; }
+  .help-btn { padding: 6px 9px; font-size: var(--fs-sm); gap: 5px; }
+}
+@media (max-width: 380px) {
+  .help-btn { padding: 6px 7px; gap: 4px; }
+  .help-btn .badge { width: 16px; height: 16px; }
+  .help-btn .badge svg { width: 10px; height: 10px; }
+}
