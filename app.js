@@ -1046,9 +1046,8 @@
     catch (err) { btn.textContent = "Select the text and copy"; }
     setTimeout(() => { btn.textContent = "Copy citation"; }, 1800);
   };
-  let seen = false;
-  try { seen = localStorage.getItem("grn-help-seen") === "1"; } catch (e) { /* ignore */ }
-  if (!seen) openHelp();
+  // The Reading Guide no longer opens by itself: the BMES 2026 invitation is shown
+  // on the entry page and as a banner here. The "Reading Guide" button opens it.
 
   // The one-line tip on the map fades once the visitor has interacted.
   const tip = $("stage-tip");

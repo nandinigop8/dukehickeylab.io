@@ -99,3 +99,30 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .entries a { transition: none; }
 }
+
+/* BMES 2026 invitation (opens on arrival; see index.html) */
+dialog#event {
+  width: min(440px, calc(100vw - 32px)); padding: 38px 28px 30px; text-align: center;
+  background: #151519; color: var(--text);
+  border: 1px solid rgba(208, 152, 142, 0.45); border-radius: 18px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .6), 0 0 70px rgba(208, 152, 142, .10);
+}
+dialog#event::backdrop { background: rgba(6, 6, 9, .74); }
+.event-title {
+  margin: 0 0 18px; color: var(--brand);
+  font: 500 clamp(24px, 6.6vw, 34px)/1.2 "Cinzel", Georgia, serif; letter-spacing: .04em;
+}
+.event-details { display: grid; gap: 6px; margin: 0 0 26px; font-size: 18px; }
+.event-details b { font-weight: 500; color: var(--text); }
+.event-go {
+  background: var(--brand); color: #1a1214; border: 0; border-radius: 999px;
+  padding: 12px 28px; font: 500 14px var(--font); letter-spacing: .05em; cursor: pointer;
+}
+.event-go:hover { filter: brightness(1.08); }
+.event-title:focus { outline: none; }  /* opening focus lands on the heading, not the × */
+.event-go:focus-visible, .event-close:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+.event-close {
+  position: absolute; top: 8px; right: 12px; background: none; border: 0;
+  color: var(--muted); font-size: 26px; line-height: 1; cursor: pointer; padding: 4px 8px;
+}
+.event-close:hover { color: var(--text); }

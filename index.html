@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Inter:wght@400;500&family=Mrs+Saint+Delafield&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="landing.css?v=2.0">
+  <link rel="stylesheet" href="landing.css?v=2.1">
 </head>
 <body>
   <canvas id="stars" aria-hidden="true"></canvas>
@@ -34,6 +34,15 @@
       </a>
     </nav>
   </main>
+
+  <!-- BMES 2026 invitation. Opens once per browser session, before the visitor enters.
+       Remove this <dialog> and the "BMES invitation" script below after the conference. -->
+  <dialog id="event" aria-labelledby="event-title">
+    <button class="event-close" id="event-close" aria-label="Close">×</button>
+    <h2 class="event-title" id="event-title" tabindex="-1" autofocus>Come visit us at BMES 2026!</h2>
+    <p class="event-details"><b>Saturday 10–11am</b><b>Poster RR1</b></p>
+    <button class="event-go" id="event-go" type="button">Enter the atlas</button>
+  </dialog>
 
   <script>
     // Faint starfield; static when the visitor prefers reduced motion.
@@ -71,6 +80,22 @@
       const w = innerWidth;
       const guess = w < 700 ? "phone" : w < 1180 ? "tablet" : "desktop";
       document.querySelector(`.entries a[data-ui="${guess}"]`)?.classList.add("suggested");
+    })();
+
+    // BMES invitation: once per browser session, before the visitor enters.
+    (function () {
+      const d = document.getElementById("event");
+      if (!d) return;
+      const KEY = "astraea-bmes-seen";
+      let seen = false;
+      try { seen = sessionStorage.getItem(KEY) === "1"; } catch (e) { /* ignore */ }
+      const remember = () => { try { sessionStorage.setItem(KEY, "1"); } catch (e) { /* ignore */ } };
+      const close = () => { remember(); if (d.close) d.close(); else d.removeAttribute("open"); };
+      document.getElementById("event-go").onclick = close;
+      document.getElementById("event-close").onclick = close;
+      d.addEventListener("cancel", remember);                      // Esc key
+      d.addEventListener("click", (e) => { if (e.target === d) close(); });  // click outside the card
+      if (!seen) { if (d.showModal) d.showModal(); else d.setAttribute("open", ""); }
     })();
   </script>
 </body>

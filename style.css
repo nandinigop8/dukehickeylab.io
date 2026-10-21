@@ -489,3 +489,13 @@ dialog#about, dialog#citation { width: min(640px, calc(100vw - 32px)); }
   .help-btn .badge { width: 16px; height: 16px; }
   .help-btn .badge svg { width: 10px; height: 10px; }
 }
+
+/* BMES 2026 banner (top of the atlas; see atlas.html) */
+.event-bar {
+  flex: none; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 14px;
+  padding: 8px 14px; text-align: center; font-size: var(--fs-md); color: var(--text);
+  background: linear-gradient(90deg, rgba(199, 146, 234, .20), rgba(208, 152, 142, .20));
+  border-bottom: 1px solid var(--border);
+}
+.event-bar strong { font-weight: 700; }
+.event-bar .when { color: var(--text-2); }
